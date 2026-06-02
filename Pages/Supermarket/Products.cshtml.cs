@@ -82,10 +82,26 @@ namespace NearGo.Pages.Supermarket
                 .FirstOrDefaultAsync(p => p.Id == id && p.SupermarketId == user.SupermarketId.Value);
             if (product == null) return NotFound();
 
-            _context.Products.Remove(product);
+            product.IsActive = false;
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Đã xóa sản phẩm";
+            TempData["Success"] = "Đã ẩn sản phẩm";
+            return RedirectToPage("Products");
+        }
+
+        public async Task<IActionResult> OnGetUnhideAsync(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user?.SupermarketId == null) return Forbid();
+
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p => p.Id == id && p.SupermarketId == user.SupermarketId.Value);
+            if (product == null) return NotFound();
+
+            product.IsActive = true;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Đã hiện sản phẩm";
             return RedirectToPage("Products");
         }
     }

@@ -1,0 +1,62 @@
+@page
+@model NearGo.Pages.Admin.CommissionSettingsModel
+@{
+    ViewData["Title"] = "Cài đặt hoa hồng";
+    Layout = "_AdminLayout";
+}
+<div class="max-w-2xl mx-auto space-y-6">
+    <div class="bg-gradient-to-r from-primary-600 via-primary-500 to-accent-500 rounded-2xl p-6 text-white">
+        <h2 class="text-xl font-bold">Cài đặt hoa hồng</h2>
+        <p class="text-white/70 text-sm mt-1">Quản lý tỷ lệ hoa hồng nền tảng áp dụng cho tất cả siêu thị</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+        @if (Model.LastUpdated.HasValue)
+        {
+            <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-sm text-blue-700 dark:text-blue-300">
+                <i class="fas fa-info-circle mr-1"></i>
+                Lần cập nhật gần nhất: @Model.LastUpdated.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                @if (!string.IsNullOrEmpty(Model.UpdatedByName))
+                {
+                    <span>bởi @Model.UpdatedByName</span>
+                }
+            </div>
+        }
+
+        <form method="post" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tỷ lệ hoa hồng (%)</label>
+                <div class="relative">
+                    <input type="number" asp-for="CommissionPercent" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent text-2xl font-bold text-center" step="0.5" min="0" max="100" />
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl font-bold">%</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1.5">
+                    Hoa hồng này sẽ được áp dụng cho tất cả yêu cầu rút tiền mới.
+                    Hiện tại: <strong>@Model.CurrentPercent%</strong>
+                </p>
+                <span asp-validation-for="CommissionPercent" class="text-red-500 text-xs"></span>
+            </div>
+
+            <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i class="fas fa-lightbulb text-amber-500"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-amber-800 dark:text-amber-200">Lưu ý</p>
+                        <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                            Thay đổi tỷ lệ hoa hồng chỉ áp dụng cho các yêu cầu rút tiền <strong>mới</strong> được tạo sau khi cập nhật.
+                            Các yêu cầu đã có sẽ giữ nguyên tỷ lệ hoa hồng cũ.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors">
+                <i class="fas fa-save mr-2"></i>Cập nhật hoa hồng
+            </button>
+        </form>
+    </div>
+</div>
+
+

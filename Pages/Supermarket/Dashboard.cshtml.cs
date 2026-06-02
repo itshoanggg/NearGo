@@ -22,6 +22,7 @@ namespace NearGo.Pages.Supermarket
 
         public NearGo.Models.Supermarket? Supermarket { get; set; }
         public decimal TotalRevenue { get; set; }
+        public decimal Balance { get; set; }
         public int TotalOrders { get; set; }
         public int TotalProducts { get; set; }
         public int ProductsThisMonth { get; set; }
@@ -35,6 +36,8 @@ namespace NearGo.Pages.Supermarket
 
             Supermarket = await _context.Supermarkets.FindAsync(user.SupermarketId.Value);
             if (Supermarket == null) return;
+
+            Balance = Supermarket.Balance;
 
             TotalRevenue = await _context.Orders
                 .Where(o => o.SupermarketId == Supermarket.Id && o.PaymentStatus == "Paid" && o.Status != "Cancelled")

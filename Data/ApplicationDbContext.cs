@@ -1,12 +1,19 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using NearGo.Configurations;
 using NearGo.Models;
+using Microsoft.Extensions.Options;
 
 namespace NearGo.Data
 {
     public class ApplicationDbContext : IdentityDbContext<AppUser>
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+        private readonly decimal _defaultCommissionPercent;
+
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IOptions<FinanceSettings>? financeSettings = null) : base(options)
+        {
+            _defaultCommissionPercent = financeSettings?.Value?.DefaultCommissionPercent ?? 10m;
+        }
 
         public DbSet<Product> Products => Set<Product>();
         public DbSet<Category> Categories => Set<Category>();
@@ -26,7 +33,60 @@ namespace NearGo.Data
         public DbSet<PlatformFee> PlatformFees => Set<PlatformFee>();
         public DbSet<PendingCheckout> PendingCheckouts => Set<PendingCheckout>();
         public DbSet<SupermarketRating> SupermarketRatings => Set<SupermarketRating>();
+        private List<(int SupermarketId, decimal TotalAmount, string OrderCode)> _pendingCommissions = new();
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            _pendingCommissions.Clear();
+
+            foreach (var entry in ChangeTracker.Entries<Order>())
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    var order = entry.Entity;
+                    if (order.PaymentMethod == "SEPay" && order.PaymentStatus == "Paid")
+                    {
+                        _pendingCommissions.Add((order.SupermarketId, order.TotalAmount, order.OrderCode));
+                    }
+                }
+            }
+
+            var result = await base.SaveChangesAsync(cancellationToken);
+
+            foreach (var (supermarketId, totalAmount, orderCode) in _pendingCommissions)
+            {
+                var supermarket = await Supermarkets.FindAsync(new object[] { supermarketId }, cancellationToken);
+                if (supermarket != null)
+                {
+                    var commissionAmount = totalAmount * _defaultCommissionPercent / 100;
+                    var supermarketEarned = totalAmount - commissionAmount;
+                    supermarket.Balance += supermarketEarned;
+
+                    PlatformFees.Add(new PlatformFee
+                    {
+                        SupermarketId = supermarketId,
+                        FeeType = "Commission",
+                        Amount = commissionAmount,
+                        Description = $"Phí hoa hồng {_defaultCommissionPercent}% đơn hàng #{orderCode}",
+                        Status = "Paid",
+                        CreatedAt = DateTime.UtcNow,
+                        PaidAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            if (_pendingCommissions.Count > 0)
+            {
+                await base.SaveChangesAsync(cancellationToken);
+            }
+
+            return result;
+        }
+
         public DbSet<Report> Reports => Set<Report>();
+        public DbSet<SupermarketBankInfo> SupermarketBankInfos => Set<SupermarketBankInfo>();
+        public DbSet<WithdrawalRequest> WithdrawalRequests => Set<WithdrawalRequest>();
+        public DbSet<PlatformSetting> PlatformSettings => Set<PlatformSetting>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -147,6 +207,27 @@ namespace NearGo.Data
                 e.HasOne(r => r.Reporter).WithMany(u => u.Reports).HasForeignKey(r => r.ReporterId).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne(r => r.Supermarket).WithMany(s => s.Reports).HasForeignKey(r => r.SupermarketId).OnDelete(DeleteBehavior.SetNull);
                 e.HasOne(r => r.Admin).WithMany().HasForeignKey(r => r.AdminId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            builder.Entity<SupermarketBankInfo>(e =>
+            {
+                e.HasOne(b => b.Supermarket)
+                    .WithOne(s => s.BankInfo)
+                    .HasForeignKey<SupermarketBankInfo>(b => b.SupermarketId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            builder.Entity<WithdrawalRequest>(e =>
+            {
+                e.HasOne(w => w.Supermarket)
+                    .WithMany(s => s.WithdrawalRequests)
+                    .HasForeignKey(w => w.SupermarketId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(w => w.ApprovedBy)
+                    .WithMany()
+                    .HasForeignKey(w => w.ApprovedById)
+                    .OnDelete(DeleteBehavior.SetNull);
+                e.HasIndex(w => w.Status);
             });
 
             builder.Entity<AppUser>(e =>

@@ -1,0 +1,179 @@
+@page
+@model NearGo.Pages.Admin.WithdrawalsModel
+@{
+    ViewData["Title"] = "Quản lý rút tiền";
+    Layout = "_AdminLayout";
+}
+<div class="space-y-6">
+    <div class="bg-gradient-to-r from-primary-600 via-primary-500 to-accent-500 rounded-2xl p-6 text-white">
+        <h2 class="text-xl font-bold">Quản lý rút tiền</h2>
+        <p class="text-white/70 text-sm mt-1">Xét duyệt yêu cầu rút tiền từ siêu thị</p>
+    </div>
+
+    <div class="flex gap-2 flex-wrap">
+        <a href="/admin/withdrawals?filter=all" class="px-4 py-2 rounded-xl text-sm font-medium @(Model.Filter == "all" ? "bg-primary-500 text-white" : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700")">Tất cả</a>
+        <a href="/admin/withdrawals?filter=pending" class="px-4 py-2 rounded-xl text-sm font-medium @(Model.Filter == "pending" ? "bg-primary-500 text-white" : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700")">Chờ duyệt</a>
+        <a href="/admin/withdrawals?filter=approved" class="px-4 py-2 rounded-xl text-sm font-medium @(Model.Filter == "approved" ? "bg-primary-500 text-white" : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700")">Đã duyệt</a>
+        <a href="/admin/withdrawals?filter=paid" class="px-4 py-2 rounded-xl text-sm font-medium @(Model.Filter == "paid" ? "bg-primary-500 text-white" : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700")">Đã trả</a>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        @if (Model.Withdrawals.Any())
+        {
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-gray-500 border-b border-gray-100 dark:border-gray-700">
+                            <th class="p-4 font-medium">ID</th>
+                            <th class="p-4 font-medium">Siêu thị</th>
+                            <th class="p-4 font-medium">Số tiền</th>
+                            <th class="p-4 font-medium">Hoa hồng</th>
+                            <th class="p-4 font-medium">Thực nhận</th>
+                            <th class="p-4 font-medium">Trạng thái</th>
+                            <th class="p-4 font-medium">Ngày yêu cầu</th>
+                            <th class="p-4 font-medium">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var w in Model.Withdrawals)
+                        {
+                            <tr class="border-b border-gray-50 dark:border-gray-800">
+                                <td class="p-4 text-gray-900 dark:text-white font-medium">#@w.Id</td>
+                                <td class="p-4">
+                                    <div>
+                                        <p class="text-gray-900 dark:text-white font-medium">@w.Supermarket.Name</p>
+                                        @if (w.IsAutoPayout)
+                                        {
+                                            <span class="text-xs text-blue-500">Tự động tuần @w.PeriodMonth/@w.PeriodYear</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="p-4 text-gray-900 dark:text-white font-medium">@w.Amount.ToString("N0")đ</td>
+                                <td class="p-4 text-red-500">@w.CommissionAmount.ToString("N0")đ (@w.CommissionPercent%)</td>
+                                <td class="p-4 text-green-600 font-medium">@w.FinalAmount.ToString("N0")đ</td>
+                                <td class="p-4">
+                                    @if (w.Status == "Pending")
+                                    {
+                                        <span class="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-600">Chờ duyệt</span>
+                                    }
+                                    else if (w.Status == "Approved")
+                                    {
+                                        <span class="px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-600">Đã duyệt</span>
+                                    }
+                                    else if (w.Status == "Paid")
+                                    {
+                                        <span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-600">Đã trả</span>
+                                    }
+                                    else if (w.Status == "Rejected")
+                                    {
+                                        <span class="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-600">Từ chối</span>
+                                    }
+                                </td>
+                                <td class="p-4 text-gray-500">@w.RequestedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                                <td class="p-4">
+                                    @if (w.Status == "Pending")
+                                    {
+                                        <form method="post" asp-page-handler="Approve" class="inline">
+                                            <input type="hidden" name="RequestId" value="@w.Id" />
+                                            <input type="hidden" name="RequestFilter" value="@Model.Filter" />
+                                            <button type="submit" class="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-xs font-medium">Duyệt</button>
+                                        </form>
+                                        <button onclick="openReject(@w.Id)" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-medium ml-1">Từ chối</button>
+                                    }
+                                    else if (w.Status == "Approved")
+                                    {
+                                        <button data-bank='@w.BankInfoJson' onclick="showBankInfo(this, @w.Id)" class="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-xs font-medium">Chuyển tiền</button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-xs text-gray-400">-</span>
+                                    }
+                                </td>
+                            </tr>
+                            @if (w.Status == "Pending")
+                            {
+                                <tr id="rejectForm-@w.Id" class="hidden">
+                                    <td colspan="8" class="p-4 bg-gray-50 dark:bg-gray-700/50">
+                                        <form method="post" asp-page-handler="Reject" class="flex items-center gap-3 max-w-lg">
+                                            <input type="hidden" name="RequestId" value="@w.Id" />
+                                            <input type="hidden" name="RequestFilter" value="@Model.Filter" />
+                                            <div>
+                                                <label class="text-xs text-gray-500">Lý do từ chối</label>
+                                                <input type="text" name="RejectReason" class="w-64 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm" placeholder="Lý do..." />
+                                            </div>
+                                            <button type="submit" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium">Xác nhận từ chối</button>
+                                            <button type="button" onclick="closeReject(@w.Id)" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg text-sm">Hủy</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-12">
+                <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-inbox text-2xl text-gray-400"></i>
+                </div>
+                <p class="text-gray-500 text-sm">Không có yêu cầu rút tiền</p>
+            </div>
+        }
+    </div>
+</div>
+
+<div id="bankInfoModal" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-xl">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Thông tin chuyển tiền</h3>
+        <div id="bankInfoContent" class="space-y-3 mb-6">
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                <p class="text-xs text-gray-500 mb-1">Tên ngân hàng</p>
+                <p id="bankNameDisplay" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
+            </div>
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                <p class="text-xs text-gray-500 mb-1">Số tài khoản</p>
+                <p id="accountNumberDisplay" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
+            </div>
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                <p class="text-xs text-gray-500 mb-1">Chủ tài khoản</p>
+                <p id="accountHolderDisplay" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <form method="post" asp-page-handler="Paid" class="flex-1">
+                <input type="hidden" name="RequestId" id="paidRequestId" value="" />
+                <input type="hidden" name="RequestFilter" value="@Model.Filter" />
+                <button type="submit" class="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl text-sm">Xác nhận đã chuyển tiền</button>
+            </form>
+            <button onclick="closeBankInfo()" class="px-6 py-3 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-medium">Hủy</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openReject(id) {
+        document.getElementById('rejectForm-' + id).classList.remove('hidden');
+    }
+    function closeReject(id) {
+        document.getElementById('rejectForm-' + id).classList.add('hidden');
+    }
+
+    function showBankInfo(btn, id) {
+        try {
+            var info = JSON.parse(btn.getAttribute('data-bank'));
+            document.getElementById('bankNameDisplay').textContent = info.BankName || '-';
+            document.getElementById('accountNumberDisplay').textContent = info.AccountNumber || '-';
+            document.getElementById('accountHolderDisplay').textContent = info.AccountHolder || '-';
+            document.getElementById('paidRequestId').value = id;
+            document.getElementById('bankInfoModal').classList.remove('hidden');
+        } catch(e) {
+            alert('Không thể đọc thông tin tài khoản');
+        }
+    }
+
+    function closeBankInfo() {
+        document.getElementById('bankInfoModal').classList.add('hidden');
+    }
+</script>

@@ -442,6 +442,141 @@ namespace NearGo.Data
             context.Vouchers.AddRange(vouchers);
             await context.SaveChangesAsync();
             }
+
+            var allSmIds = await context.Supermarkets.Select(s => s.Id).ToListAsync();
+            if (allSmIds.Count > 0)
+                await SeedFinanceData(context, new Random(), allSmIds);
+        }
+
+        private static async Task SeedFinanceData(ApplicationDbContext context, Random rand, List<int> supermarketIds)
+    {
+        var bankInfoSeeded = await context.SupermarketBankInfos.AnyAsync();
+        if (bankInfoSeeded) return;
+
+        var allCustomers = await context.Users.Where(u => u.Email.StartsWith("customer")).ToListAsync();
+        if (allCustomers.Count == 0) return;
+
+        var smIds = supermarketIds;
+
+        var testBankInfos = new List<SupermarketBankInfo>
+        {
+            new() { SupermarketId = smIds[0], BankName = "Vietcombank", AccountNumber = "1012345678", AccountHolder = "VINMART THU DUC", CreatedAt = DateTime.UtcNow },
+            new() { SupermarketId = smIds[2], BankName = "Techcombank", AccountNumber = "1928374650", AccountHolder = "AEON FOOD MARKET", CreatedAt = DateTime.UtcNow },
+            new() { SupermarketId = smIds[4], BankName = "MB Bank", AccountNumber = "1567890123", AccountHolder = "MART VAN PHUC", CreatedAt = DateTime.UtcNow },
+            new() { SupermarketId = smIds[5], BankName = "ACB", AccountNumber = "1234567890", AccountHolder = "GREEN FOOD DA NANG", CreatedAt = DateTime.UtcNow },
+            new() { SupermarketId = smIds[9], BankName = "VietinBank", AccountNumber = "1098764321", AccountHolder = "ECO FOOD HUE", CreatedAt = DateTime.UtcNow },
+        };
+        context.SupermarketBankInfos.AddRange(testBankInfos);
+        await context.SaveChangesAsync();
+
+        for (int i = 0; i < 12; i++)
+        {
+            var smId = smIds[i % 6];
+            var customer = allCustomers[i % allCustomers.Count];
+            var amount = (decimal)((i + 1) * 15000);
+
+            var order = new Order
+            {
+                OrderCode = $"SEED_SEPAY_{i + 1:D4}",
+                CustomerId = customer.Id,
+                SupermarketId = smId,
+                SubTotal = amount,
+                TotalAmount = amount,
+                Status = "Confirmed",
+                PaymentStatus = "Paid",
+                PaymentMethod = "SEPay",
+                TransactionId = $"SEED_TXN_{i + 1:D4}",
+                ShippingAddress = customer.Address ?? "123 Test Street",
+                CustomerName = customer.FullName,
+                CustomerPhone = customer.PhoneNumber ?? "0900000000",
+                OrderDate = DateTime.UtcNow.AddDays(-rand.Next(1, 10)),
+                PaymentDate = DateTime.UtcNow.AddDays(-rand.Next(1, 10))
+            };
+            context.Orders.Add(order);
+            order.OrderItems.Add(new OrderItem
+            {
+                ProductId = (await context.Products.Where(p => p.SupermarketId == smId).Select(p => (int?)p.Id).FirstOrDefaultAsync()) ?? 1,
+                Quantity = 1,
+                UnitPrice = amount,
+                TotalPrice = amount
+            });
+            order.PaymentTransaction = new PaymentTransaction
+            {
+                PaymentMethod = "SEPay",
+                TransactionId = order.TransactionId,
+                Amount = amount,
+                Status = "Success",
+                ResponseCode = "00",
+                ResponseMessage = "Thanh toán thành công",
+                CreatedAt = order.OrderDate,
+                PaidAt = order.PaymentDate
+            };
+            await context.SaveChangesAsync();
+        }
+
+        var allSupermarkets = await context.Supermarkets.ToListAsync();
+        var sm4 = allSupermarkets.FirstOrDefault(s => s.Id == smIds[4]);
+        if (sm4?.Balance >= 30000)
+        {
+                    context.WithdrawalRequests.Add(new WithdrawalRequest
+                    {
+                        SupermarketId = smIds[4],
+                        Amount = 30000,
+                        CommissionPercent = 25,
+                        CommissionAmount = 7500,
+                        FinalAmount = 22500,
+                Status = "Pending",
+                BankInfoJson = System.Text.Json.JsonSerializer.Serialize(new { BankName = "MB Bank", AccountNumber = "1567890123", AccountHolder = "MART VAN PHUC" }),
+                RequestedAt = DateTime.UtcNow.AddDays(-1),
+                IsAutoPayout = false
+            });
+        }
+
+        var sm0 = allSupermarkets.FirstOrDefault(s => s.Id == smIds[0]);
+        if (sm0?.Balance >= 50000)
+        {
+                    context.WithdrawalRequests.Add(new WithdrawalRequest
+                    {
+                        SupermarketId = smIds[0],
+                        Amount = 50000,
+                        CommissionPercent = 25,
+                        CommissionAmount = 12500,
+                        FinalAmount = 37500,
+                        Status = "Approved",
+                BankInfoJson = System.Text.Json.JsonSerializer.Serialize(new { BankName = "Vietcombank", AccountNumber = "1012345678", AccountHolder = "VINMART THU DUC" }),
+                RequestedAt = DateTime.UtcNow.AddDays(-3),
+                ProcessedAt = DateTime.UtcNow.AddDays(-2),
+                IsAutoPayout = false
+            });
+
+                    context.WithdrawalRequests.Add(new WithdrawalRequest
+                    {
+                        SupermarketId = smIds[0],
+                        Amount = 20000,
+                        CommissionPercent = 25,
+                        CommissionAmount = 5000,
+                        FinalAmount = 15000,
+                Status = "Rejected",
+                BankInfoJson = System.Text.Json.JsonSerializer.Serialize(new { BankName = "Vietcombank", AccountNumber = "1012345678", AccountHolder = "VINMART THU DUC" }),
+                RequestedAt = DateTime.UtcNow.AddDays(-5),
+                ProcessedAt = DateTime.UtcNow.AddDays(-4),
+                AdminNote = "Số dư không đủ tại thời điểm yêu cầu",
+                IsAutoPayout = false
+            });
+        }
+
+        await context.SaveChangesAsync();
+
+        if (!await context.PlatformSettings.AnyAsync(s => s.Key == "commission_percent"))
+        {
+            context.PlatformSettings.Add(new PlatformSetting
+            {
+                Key = "commission_percent",
+                Value = "25",
+                UpdatedAt = DateTime.UtcNow
+            });
+            await context.SaveChangesAsync();
         }
     }
+}
 }

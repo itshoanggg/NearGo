@@ -1,0 +1,176 @@
+@page
+@model NearGo.Pages.Supermarket.WalletModel
+@{
+    ViewData["Title"] = "Ví của tôi";
+    Layout = "_SupermarketLayout";
+}
+<div class="space-y-6">
+    <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-white">
+        <h2 class="text-xl font-bold">Ví của tôi</h2>
+        <p class="text-white/70 text-sm mt-1">Quản lý số dư và yêu cầu rút tiền</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p class="text-sm text-gray-500 mb-1">Số dư khả dụng</p>
+            <p class="text-3xl font-bold text-gray-900 dark:text-white">@Model.Balance.ToString("N0")đ</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p class="text-sm text-gray-500 mb-1">Tổng đã nhận</p>
+            <p class="text-3xl font-bold text-green-600">@Model.TotalEarned.ToString("N0")đ</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p class="text-sm text-gray-500 mb-1">Tổng phí hoa hồng</p>
+            <p class="text-3xl font-bold text-accent-600">@Model.TotalCommission.ToString("N0")đ</p>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Yêu cầu rút tiền</h3>
+            @if (Model.Balance > 0)
+            {
+                <form method="post" asp-page-handler="Request">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Số tiền muốn rút</label>
+                        <div class="relative">
+                            <input type="number" id="withdrawAmount" asp-for="WithdrawAmount" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Nhập số tiền" min="10000" max="@Model.Balance" oninput="calculateFee(this.value)" />
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">đ</span>
+                        </div>
+                        <span asp-validation-for="WithdrawAmount" class="text-red-500 text-xs"></span>
+                    </div>
+
+                    <div id="feeBreakdown" class="mb-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl space-y-2 hidden">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">Số tiền yêu cầu</span>
+                            <span class="font-medium text-gray-900 dark:text-white" id="displayAmount">0đ</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">Phí hoa hồng (<span id="commissionRate">@Model.DefaultCommissionPercent</span>%)</span>
+                            <span class="font-medium text-red-500" id="displayFee">0đ</span>
+                        </div>
+                        <hr class="border-gray-200 dark:border-gray-600" />
+                        <div class="flex justify-between text-sm font-semibold">
+                            <span class="text-gray-700 dark:text-gray-200">Số tiền thực nhận</span>
+                            <span class="text-green-600" id="displayFinal">0đ</span>
+                        </div>
+                    </div>
+
+                    @if (!Model.HasBankInfo)
+                    {
+                        <div class="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl text-sm text-amber-700 dark:text-amber-300">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>Bạn cần
+                            <a href="/supermarket/bankinfo" class="underline font-medium">thêm thông tin tài khoản ngân hàng</a>
+                            trước khi rút tiền
+                        </div>
+                    }
+                    <button type="submit" class="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2" disabled="@(!Model.HasBankInfo)">
+                        <i class="fas fa-paper-plane"></i> Gửi yêu cầu rút tiền
+                    </button>
+                </form>
+            }
+            else
+            {
+                <div class="text-center py-8">
+                    <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-coins text-2xl text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-500 text-sm">Chưa có số dư để rút</p>
+                </div>
+            }
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Lịch sử giao dịch</h3>
+            @if (Model.Withdrawals.Any())
+            {
+                <div class="space-y-3">
+                    @foreach (var w in Model.Withdrawals)
+                    {
+                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">@w.Amount.ToString("N0")đ</p>
+                                <p class="text-xs text-gray-500">@w.RequestedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                                @if (w.IsAutoPayout)
+                                {
+                                    <span class="text-xs text-blue-500">Tự động tuần @w.PeriodMonth/@w.PeriodYear</span>
+                                }
+                            </div>
+                            <div class="text-right">
+                                @if (w.Status == "Pending")
+                                {
+                                    <span class="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-600">Chờ duyệt</span>
+                                }
+                                else if (w.Status == "Approved")
+                                {
+                                    <span class="px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-600">Đã duyệt</span>
+                                }
+                                else if (w.Status == "Paid")
+                                {
+                                    <span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-600">Đã trả</span>
+                                }
+                                else if (w.Status == "Rejected")
+                                {
+                                    <span class="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-600">Từ chối</span>
+                                }
+                                <p class="text-xs text-gray-400 mt-0.5">Phí: @w.CommissionAmount.ToString("N0")đ</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-sm text-gray-400 text-center py-8">Chưa có giao dịch nào</p>
+            }
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Thông tin tài khoản nhận tiền</h3>
+            <a href="/supermarket/bankinfo" class="text-sm text-primary-500 hover:text-primary-600">
+                <i class="fas fa-edit mr-1"></i>@(Model.HasBankInfo ? "Chỉnh sửa" : "Thêm tài khoản")
+            </a>
+        </div>
+        @if (Model.HasBankInfo)
+        {
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <p class="text-xs text-gray-400">Ngân hàng</p>
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">@Model.BankName</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Số tài khoản</p>
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">@Model.AccountNumber</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Chủ tài khoản</p>
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">@Model.AccountHolder</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                <i class="fas fa-exclamation-circle text-amber-500"></i>
+                <p class="text-sm text-amber-700 dark:text-amber-300">Chưa có thông tin tài khoản ngân hàng</p>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    var commissionRate = @Model.DefaultCommissionPercent;
+
+    function calculateFee(amount) {
+        var numAmount = parseFloat(amount) || 0;
+        var fee = Math.round(numAmount * commissionRate / 100);
+        var finalAmount = numAmount - fee;
+
+        document.getElementById('feeBreakdown').classList.remove('hidden');
+        document.getElementById('displayAmount').textContent = numAmount.toLocaleString('vi-VN') + 'đ';
+        document.getElementById('displayFee').textContent = '-' + fee.toLocaleString('vi-VN') + 'đ';
+        document.getElementById('displayFinal').textContent = finalAmount.toLocaleString('vi-VN') + 'đ';
+    }
+</script>

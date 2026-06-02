@@ -1,0 +1,110 @@
+@page
+@model NearGo.Pages.Supermarket.BankInfoModel
+@{
+    ViewData["Title"] = "Thông tin tài khoản ngân hàng";
+    Layout = "_SupermarketLayout";
+}
+<div class="max-w-2xl mx-auto space-y-6">
+    <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-white">
+        <h2 class="text-xl font-bold">Thông tin tài khoản ngân hàng</h2>
+        <p class="text-white/70 text-sm mt-1">@(Model.HasBankInfo ? "Cập nhật tài khoản nhận tiền" : "Thêm tài khoản nhận tiền")</p>
+    </div>
+
+    @if (Model.HasBankInfo)
+    {
+        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-500 text-lg"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-green-800 dark:text-green-200">Đã có thông tin tài khoản</p>
+                    <p class="text-xs text-green-600 dark:text-green-400">Bạn có thể chỉnh sửa thông tin bên dưới</p>
+                </div>
+            </div>
+        </div>
+    }
+
+    <form method="post" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 space-y-5">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tên ngân hàng</label>
+            <input type="text" asp-for="BankName" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="VD: Vietcombank, Techcombank..." />
+            <span asp-validation-for="BankName" class="text-red-500 text-xs mt-1"></span>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Số tài khoản</label>
+            <input type="text" asp-for="AccountNumber" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="VD: 1234567890" />
+            <span asp-validation-for="AccountNumber" class="text-red-500 text-xs mt-1"></span>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tên chủ tài khoản</label>
+            <input type="text" asp-for="AccountHolder" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="VD: NGUYEN VAN A" />
+            <span asp-validation-for="AccountHolder" class="text-red-500 text-xs mt-1"></span>
+        </div>
+
+        <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" asp-for="AgreedToTerms" class="mt-1 w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
+                <span class="text-sm text-gray-600 dark:text-gray-300">
+                    Tôi đã đọc và đồng ý với
+                    <button type="button" onclick="document.getElementById('commitmentModal').classList.remove('hidden')" class="text-primary-500 hover:text-primary-600 underline font-medium">cam kết giữ tiền</button>
+                    của NearGo
+                </span>
+            </label>
+            <span asp-validation-for="AgreedToTerms" class="text-red-500 text-xs mt-1"></span>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors">
+            <i class="fas fa-save mr-2"></i>@(Model.HasBankInfo ? "Cập nhật" : "Lưu thông tin")
+        </button>
+    </form>
+
+    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4">
+        <div class="flex items-start gap-3">
+            <div class="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <i class="fas fa-info-circle text-amber-500"></i>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-amber-800 dark:text-amber-200">Lưu ý</p>
+                <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">Thông tin tài khoản này sẽ được admin sử dụng để chuyển tiền khi bạn yêu cầu rút tiền. Vui lòng nhập chính xác thông tin.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="commitmentModal" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-lg w-full shadow-xl max-h-[90vh] overflow-y-auto">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Cam kết giữ tiền và chuyển khoản</h3>
+        <div class="space-y-3 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+            <p>Tôi (<span id="holderDisplay" class="font-semibold"></span>) - chủ tài khoản siêu thị trên NearGo, xin cam kết và đồng ý với các điều khoản sau:</p>
+            <ol class="list-decimal pl-5 space-y-2">
+                <li><strong>NearGo (Admin nền tảng)</strong> sẽ giữ hộ số tiền từ các đơn hàng của tôi sau khi đã trừ phí hoa hồng theo chính sách của nền tảng.</li>
+                <li>Khi tôi yêu cầu rút tiền, NearGo sẽ xét duyệt và tiến hành chuyển khoản vào tài khoản ngân hàng đã đăng ký trong thời gian sớm nhất.</li>
+                <li>Tôi xác nhận thông tin tài khoản ngân hàng đã cung cấp là <strong>chính xác và hợp lệ</strong>. Tôi chịu hoàn toàn trách nhiệm nếu thông tin sai dẫn đến chuyển khoản sai hoặc thất lạc tiền.</li>
+                <li>Tôi hiểu rằng phí hoa hồng rút tiền sẽ được áp dụng theo chính sách hiện hành của NearGo và có thể thay đổi theo thông báo của nền tảng.</li>
+                <li>Tôi đồng ý rằng NearGo có quyền từ chối hoặc tạm hoãn yêu cầu rút tiền nếu phát hiện dấu hiệu gian lận hoặc vi phạm điều khoản sử dụng.</li>
+            </ol>
+            <p class="mt-4 text-xs text-gray-400">Cam kết này có hiệu lực kể từ khi tôi nhấn "Xác nhận" bên dưới.</p>
+        </div>
+        <div class="flex gap-3 mt-6">
+            <button type="button" onclick="document.getElementById('commitmentModal').classList.add('hidden')" class="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl text-sm">Đã hiểu và đồng ý</button>
+            <button type="button" onclick="document.getElementById('commitmentModal').classList.add('hidden')" class="px-6 py-3 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-medium">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var holderInput = document.getElementById('AccountHolder');
+        var holderDisplay = document.getElementById('holderDisplay');
+        if (holderInput && holderDisplay) {
+            function updateHolder() {
+                holderDisplay.textContent = holderInput.value || '...';
+            }
+            holderInput.addEventListener('input', updateHolder);
+            updateHolder();
+        }
+    });
+</script>
+
+

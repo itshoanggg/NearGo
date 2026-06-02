@@ -278,6 +278,15 @@
     <script src="/js/site.js" asp-append-version="true"></script>
     <script>
         AOS.init({ duration: 800, once: true });
+
+        var successMsg = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["Success"]?.ToString() ?? ""));
+        var errorMsg = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["Error"]?.ToString() ?? ""));
+        if (successMsg) {
+            Swal.fire({ icon: 'success', title: successMsg, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+        }
+        if (errorMsg) {
+            Swal.fire({ icon: 'error', title: errorMsg, toast: true, position: 'top-end', showConfirmButton: false, timer: 5000 });
+        }
     </script>
     @RenderSection("Scripts", required: false)
 </body>

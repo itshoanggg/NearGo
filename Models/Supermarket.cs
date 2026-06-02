@@ -20,6 +20,7 @@ namespace NearGo.Models
         public int ReviewCount { get; set; }
         public int TotalOrders { get; set; }
         public decimal TotalRevenue { get; set; }
+        public decimal Balance { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public ICollection<Product> Products { get; set; } = new List<Product>();
         public ICollection<Order> Orders { get; set; } = new List<Order>();
@@ -28,5 +29,7 @@ namespace NearGo.Models
         public ICollection<AppUser> Followers { get; set; } = new List<AppUser>();
         public ICollection<SupermarketRating> SupermarketRatings { get; set; } = new List<SupermarketRating>();
         public ICollection<Report> Reports { get; set; } = new List<Report>();
+        public SupermarketBankInfo? BankInfo { get; set; }
+        public ICollection<WithdrawalRequest> WithdrawalRequests { get; set; } = new List<WithdrawalRequest>();
     }
 }
