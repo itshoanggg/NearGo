@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using NearGo.Data;
+using NearGo.Helpers;
 using NearGo.Models;
 
 namespace NearGo.Pages.Notifications
@@ -44,10 +45,23 @@ namespace NearGo.Pages.Notifications
                     n.RelatedUrl,
                     n.ImageUrl,
                     n.IsRead,
-                    n.CreatedAt
+                    CreatedAt = n.CreatedAt
                 })
                 .ToListAsync();
-            return new JsonResult(notifications);
+
+            var result = notifications.Select(n => new
+            {
+                n.Id,
+                n.Title,
+                n.Message,
+                n.Type,
+                n.RelatedUrl,
+                n.ImageUrl,
+                n.IsRead,
+                CreatedAt = DateTimeHelper.ToVietnamTime(n.CreatedAt)
+            });
+
+            return new JsonResult(result);
         }
 
         public async Task<JsonResult> OnPostMarkReadAsync(int id)

@@ -82,7 +82,7 @@
                                   o.Status == "Delivered" ? "Đã giao" : "Đã hủy")
                             </span>
                         </td>
-                        <td class="py-3 text-gray-500 text-xs">@o.OrderDate.ToString("dd/MM HH:mm")</td>
+                        <td class="py-3 text-gray-500 text-xs">@o.OrderDate.ToVietnamTime().ToString("dd/MM HH:mm")</td>
                         <td class="py-3 text-right">
                             <div class="flex items-center justify-end gap-1">
                                 @if (o.Status == "Pending")

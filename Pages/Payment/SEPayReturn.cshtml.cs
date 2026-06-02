@@ -32,10 +32,22 @@ namespace NearGo.Pages.Payment
                 return RedirectToPage("/NotFound");
             }
 
-            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderCode == orderCode);
-            if (order != null)
+            var pending = await _context.PendingCheckouts
+                .FirstOrDefaultAsync(p => p.OrderCode == orderCode);
+
+            if (pending != null)
             {
-                Amount = order.TotalAmount;
+                var cartItems = await _context.CartItems
+                    .Include(c => c.Product)
+                    .Where(c => c.UserId == pending.UserId && c.Product.SupermarketId == pending.SupermarketId)
+                    .ToListAsync();
+
+                Amount = cartItems.Sum(c => c.Product.DiscountedPrice * c.Quantity);
+
+                if (pending.UsePoints)
+                {
+                    Amount = Math.Max(0, Amount - 10000);
+                }
             }
             else if (amount.HasValue)
             {

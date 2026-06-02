@@ -93,15 +93,31 @@ namespace NearGo.Pages.Checkout
             var supermarketIds = CartItems.Select(c => c.Product.SupermarketId).Distinct();
             foreach (var smId in supermarketIds)
             {
+                if (Input.PaymentMethod == "SEPay")
+                {
+                    var orderCode = $"NG{DateTime.UtcNow:yyyyMMddHHmmss}{Random.Shared.Next(100, 999)}";
+
+                    var pending = new PendingCheckout
+                    {
+                        OrderCode = orderCode,
+                        UserId = userId,
+                        SupermarketId = smId,
+                        ShippingAddress = Input.ShippingAddress,
+                        CustomerName = Input.CustomerName,
+                        CustomerPhone = Input.CustomerPhone,
+                        Note = Input.Note,
+                        UsePoints = Input.UsePoints,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.PendingCheckouts.Add(pending);
+                    await _context.SaveChangesAsync();
+
+                    return RedirectToPage("/Payment/SEPayReturn", new { orderCode });
+                }
+
                 var order = await _orderService.CreateOrder(
                     userId, smId, Input.ShippingAddress,
                     Input.CustomerName, Input.CustomerPhone, Input.Note, null, Input.UsePoints);
-
-                if (Input.PaymentMethod == "SEPay")
-                {
-                    var orderCode = order.OrderCode;
-                    return RedirectToPage("/Payment/SEPayReturn", new { orderCode });
-                }
             }
 
             TempData["Success"] = "Đặt hàng thành công!";

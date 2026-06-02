@@ -51,16 +51,37 @@
             <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 text-left">
                 <p class="text-xs text-yellow-700">
                     <i class="fas fa-info-circle mr-1"></i>
-                    <strong>Lưu ý:</strong> Nội dung chuyển khoản phải bắt đầu bằng <strong>SEVQR</strong> và có chứa <strong>TKP@Model.OrderCode</strong> để hệ thống xác nhận tự động.
+                    <strong>Lưu ý:</strong> Nội dung chuyển khoản phải bắt đầu bằng <strong>SEVQR</strong> và có chứa <strong>TKP@(Model.OrderCode)</strong> để hệ thống xác nhận tự động.
                 </p>
             </div>
 
-            <a href="/customer/orders" class="inline-block w-full px-6 py-3 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors">
-                <i class="fas fa-clipboard-list mr-2"></i>Xem đơn hàng
-            </a>
         </div>
     </div>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <div id="successOverlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 text-center max-w-sm mx-4 animate-bounce-in">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check-circle text-5xl text-green-500"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Thanh toán thành công!</h2>
+            <p class="text-gray-500 mb-2">Cảm ơn bạn đã thanh toán.</p>
+            <p class="text-gray-400 text-sm">Đang chuyển hướng đến đơn hàng...</p>
+        </div>
+    </div>
+
+    <style>
+        .animate-bounce-in {
+            animation: bounceIn 0.5s ease-out;
+        }
+        @@keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+
     <script>
         const orderCode = '@Model.OrderCode';
         async function checkPayment() {
@@ -68,11 +89,15 @@
                 const resp = await fetch('/api/payment/status/' + orderCode);
                 const data = await resp.json();
                 if (data.paid) {
-                    window.location.href = '/customer/orders';
+                    document.getElementById('successOverlay').classList.remove('hidden');
+                    clearInterval(window._paymentInterval);
+                    setTimeout(() => {
+                        window.location.href = '/customer/orders';
+                    }, 2500);
                 }
             } catch (e) {}
         }
-        setInterval(checkPayment, 5000);
+        window._paymentInterval = setInterval(checkPayment, 5000);
         checkPayment();
     </script>
 </body>

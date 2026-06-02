@@ -151,28 +151,131 @@ async Task<IResult> HandleSepayWebhook(HttpContext context, SEPayService sePaySe
 
         using var scope = context.RequestServices.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var order = await db.Orders.FirstOrDefaultAsync(o => o.OrderCode == orderCode);
 
-        if (order == null)
+        var pending = await db.PendingCheckouts.FirstOrDefaultAsync(p => p.OrderCode == orderCode);
+        if (pending == null)
         {
-            return Results.Ok(new { message = "Order not found" });
+            return Results.Ok(new { message = "Pending checkout not found" });
         }
 
-        if (order.PaymentStatus == "Paid")
+        var existingOrder = await db.Orders.FirstOrDefaultAsync(o => o.OrderCode == orderCode);
+        if (existingOrder != null)
         {
-            return Results.Ok(new { message = "Already paid" });
+            db.PendingCheckouts.Remove(pending);
+            await db.SaveChangesAsync();
+            return Results.Ok(new { message = "Order already exists" });
         }
 
         decimal.TryParse(transferAmountStr, System.Globalization.NumberStyles.Any,
             System.Globalization.CultureInfo.InvariantCulture, out var transferAmount);
 
-        order.PaymentStatus = "Paid";
-        order.PaymentMethod = "SEPay";
-        order.TransactionId = transactionId;
-        order.PaymentDate = DateTime.UtcNow;
-        if (order.Status == "Pending")
+        var cartItems = await db.CartItems
+            .Include(c => c.Product)
+            .Where(c => c.UserId == pending.UserId && c.Product.SupermarketId == pending.SupermarketId)
+            .ToListAsync();
+
+        if (!cartItems.Any())
         {
-            order.Status = "Pending";
+            return Results.Ok(new { message = "Cart is empty" });
+        }
+
+        var subTotal = cartItems.Sum(c => c.Product.DiscountedPrice * c.Quantity);
+        decimal discountAmount = 0;
+        decimal loyaltyDiscount = 0;
+
+        if (pending.VoucherId.HasValue)
+        {
+            var voucher = await db.Vouchers.FindAsync(pending.VoucherId.Value);
+            if (voucher != null && voucher.IsActive && voucher.CurrentUsage < voucher.MaxUsage
+                && subTotal >= voucher.MinOrderAmount && voucher.ExpiryDate > DateTime.UtcNow)
+            {
+                discountAmount = voucher.DiscountType == "Percentage"
+                    ? Math.Min(subTotal * voucher.DiscountValue / 100, voucher.MaxDiscountAmount)
+                    : Math.Min(voucher.DiscountValue, subTotal);
+
+                voucher.CurrentUsage++;
+            }
+        }
+
+        if (pending.UsePoints)
+        {
+            var points = await db.LoyaltyPoints
+                .Where(lp => lp.UserId == pending.UserId && lp.ExpiryDate > DateTime.UtcNow)
+                .SumAsync(lp => (int?)lp.Points) ?? 0;
+
+            if (points >= 1000)
+            {
+                loyaltyDiscount = 10000;
+            }
+        }
+
+        var totalAmount = subTotal - discountAmount - loyaltyDiscount;
+        if (totalAmount < 0) totalAmount = 0;
+
+        var order = new Order
+        {
+            OrderCode = orderCode,
+            CustomerId = pending.UserId,
+            SupermarketId = pending.SupermarketId,
+            SubTotal = subTotal,
+            DiscountAmount = discountAmount,
+            ShippingFee = 0,
+            TotalAmount = totalAmount,
+            VoucherId = pending.VoucherId,
+            LoyaltyPointsUsed = pending.UsePoints ? 1000 : 0,
+            LoyaltyDiscount = loyaltyDiscount,
+            Status = "Confirmed",
+            PaymentStatus = "Paid",
+            PaymentMethod = "SEPay",
+            TransactionId = transactionId,
+            PaymentDate = DateTime.UtcNow,
+            ShippingAddress = pending.ShippingAddress,
+            CustomerName = pending.CustomerName,
+            CustomerPhone = pending.CustomerPhone,
+            CustomerNote = pending.Note,
+            OrderDate = DateTime.UtcNow
+        };
+        db.Orders.Add(order);
+        await db.SaveChangesAsync();
+
+        foreach (var cartItem in cartItems)
+        {
+            var orderItem = new OrderItem
+            {
+                OrderId = order.Id,
+                ProductId = cartItem.ProductId,
+                Quantity = cartItem.Quantity,
+                UnitPrice = cartItem.Product.DiscountedPrice,
+                TotalPrice = cartItem.Product.DiscountedPrice * cartItem.Quantity
+            };
+            db.OrderItems.Add(orderItem);
+
+            cartItem.Product.StockQuantity -= cartItem.Quantity;
+            cartItem.Product.SoldCount += cartItem.Quantity;
+        }
+        db.CartItems.RemoveRange(cartItems);
+
+        if (!pending.UsePoints)
+        {
+            db.LoyaltyPoints.Add(new LoyaltyPoint
+            {
+                UserId = pending.UserId,
+                Points = 100,
+                Source = "Purchase",
+                Description = $"Mua hàng đơn {orderCode}",
+                ExpiryDate = DateTime.UtcNow.AddMonths(6)
+            });
+        }
+        else
+        {
+            db.LoyaltyPoints.Add(new LoyaltyPoint
+            {
+                UserId = pending.UserId,
+                Points = -1000,
+                Source = "Redemption",
+                Description = $"Đổi 1000 điểm - đơn {orderCode}",
+                ExpiryDate = DateTime.UtcNow.AddMonths(6)
+            });
         }
 
         var paymentTransaction = new PaymentTransaction
@@ -181,7 +284,7 @@ async Task<IResult> HandleSepayWebhook(HttpContext context, SEPayService sePaySe
             PaymentMethod = "SEPay",
             TransactionId = transactionId,
             BankCode = gateway,
-            Amount = transferAmount > 0 ? transferAmount : order.TotalAmount,
+            Amount = transferAmount > 0 ? transferAmount : totalAmount,
             Status = "Success",
             ResponseCode = "00",
             ResponseMessage = "Thanh toán thành công qua SEPay",
@@ -192,9 +295,9 @@ async Task<IResult> HandleSepayWebhook(HttpContext context, SEPayService sePaySe
 
         var customerNotif = new Notification
         {
-            UserId = order.CustomerId,
+            UserId = pending.UserId,
             Title = "Thanh toán thành công",
-            Message = $"Đơn hàng #{order.OrderCode} đã được thanh toán qua SEPay",
+            Message = $"Đơn hàng #{orderCode} đã được thanh toán qua SEPay",
             Type = "Payment",
             RelatedUrl = $"/customer/orders/detail?id={order.Id}",
             IsRead = false,
@@ -202,12 +305,14 @@ async Task<IResult> HandleSepayWebhook(HttpContext context, SEPayService sePaySe
         };
         db.Notifications.Add(customerNotif);
 
+        db.PendingCheckouts.Remove(pending);
+
         await db.SaveChangesAsync();
 
         var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<NotificationHub>>();
-        await hubContext.Clients.Group($"user_{order.CustomerId}")
+        await hubContext.Clients.Group($"user_{pending.UserId}")
             .SendAsync("ReceiveNotification", "Thanh toán thành công",
-                $"Đơn hàng #{order.OrderCode} đã được thanh toán qua SEPay", "");
+                $"Đơn hàng #{orderCode} đã được thanh toán qua SEPay", "");
 
         return Results.Ok(new { message = "OK" });
     }
@@ -223,7 +328,7 @@ app.MapPost("/", HandleSepayWebhook).WithDisplayName("SEPayWebhookRoot");
 app.MapGet("/api/payment/status/{orderCode}", async (string orderCode, ApplicationDbContext db) =>
 {
     var order = await db.Orders.FirstOrDefaultAsync(o => o.OrderCode == orderCode);
-    if (order == null) return Results.NotFound();
+    if (order == null) return Results.Ok(new { paid = false });
     return Results.Ok(new { paid = order.PaymentStatus == "Paid" });
 });
 

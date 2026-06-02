@@ -77,7 +77,7 @@
                     <div class="flex items-center justify-between text-sm">
                         <span class="text-gray-400">Đơn hàng</span>
                         <span class="px-2 py-0.5 rounded-full text-xs font-medium @(Model.Order.Status == "Delivered" ? "bg-green-100 text-green-600" : Model.Order.Status == "Cancelled" ? "bg-red-100 text-red-600" : "bg-yellow-100 text-yellow-600")">
-                            @(Model.Order.Status == "Pending" ? "Chờ xác nhận" : Model.Order.Status == "Confirmed" ? "Đã xác nhận" : Model.Order.Status == "Shipping" ? "Đang giao" : Model.Order.Status == "Delivered" ? "Đã giao" : "Đã hủy")
+                            @(Model.Order.Status == "Pending" ? "Chờ xác nhận" : Model.Order.Status == "Confirmed" ? "Chờ giao hàng" : Model.Order.Status == "Shipping" ? "Đang giao" : Model.Order.Status == "Delivered" ? "Đã giao" : "Đã hủy")
                         </span>
                     </div>
                     <div class="flex items-center justify-between text-sm">
@@ -88,7 +88,7 @@
                     </div>
                     <div class="flex items-center justify-between text-sm">
                         <span class="text-gray-400">Ngày đặt</span>
-                        <span class="text-gray-900 dark:text-white">@Model.Order.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
+                        <span class="text-gray-900 dark:text-white">@Model.Order.OrderDate.ToVietnamTime().ToString("dd/MM/yyyy HH:mm")</span>
                     </div>
                     @if (Model.Order.DeliveredDate.HasValue)
                     {

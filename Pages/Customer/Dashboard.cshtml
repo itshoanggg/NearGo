@@ -65,12 +65,12 @@
                                     }
                                 }
                             </p>
-                            <p class="text-xs text-gray-500">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p class="text-xs text-gray-500">@order.OrderDate.ToVietnamTime().ToString("dd/MM/yyyy HH:mm")</p>
                         </div>
                         <div class="text-right">
                             <p class="text-sm font-bold text-gray-900 dark:text-white">@order.TotalAmount.ToString("N0")đ</p>
-                            <span class="text-xs px-2 py-0.5 rounded-full @(order.Status == "Delivered" ? "bg-green-100 text-green-600" : order.Status == "Pending" ? "bg-yellow-100 text-yellow-600" : "bg-blue-100 text-blue-600")">
-                                @order.Status
+                            <span class="text-xs px-2 py-0.5 rounded-full @(order.Status == "Delivered" ? "bg-green-100 text-green-600" : order.Status == "Cancelled" ? "bg-red-100 text-red-600" : "bg-yellow-100 text-yellow-600")">
+                                @(order.Status == "Pending" ? "Chờ xác nhận" : order.Status == "Confirmed" ? "Chờ giao hàng" : order.Status == "Shipping" ? "Đang giao" : order.Status == "Delivered" ? "Đã giao" : "Đã hủy")
                             </span>
                         </div>
                     </a>

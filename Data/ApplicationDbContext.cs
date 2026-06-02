@@ -24,6 +24,7 @@ namespace NearGo.Data
         public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
         public DbSet<Subscription> Subscriptions => Set<Subscription>();
         public DbSet<PlatformFee> PlatformFees => Set<PlatformFee>();
+        public DbSet<PendingCheckout> PendingCheckouts => Set<PendingCheckout>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -114,6 +115,11 @@ namespace NearGo.Data
             builder.Entity<PlatformFee>(e =>
             {
                 e.HasOne(pf => pf.Supermarket).WithMany(s => s.PlatformFees).HasForeignKey(pf => pf.SupermarketId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            builder.Entity<PendingCheckout>(e =>
+            {
+                e.HasIndex(p => p.OrderCode).IsUnique();
             });
 
             builder.Entity<Voucher>(e =>
