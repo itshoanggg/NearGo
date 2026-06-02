@@ -25,8 +25,10 @@ namespace NearGo.Data
                     CONSTRAINT FK_UserFollowed_Supermarkets FOREIGN KEY (SupermarketId) REFERENCES Supermarkets(Id) ON DELETE CASCADE
                 )");
 
-            if (await roleManager.RoleExistsAsync("Admin")) return;
+            var alreadySeeded = await roleManager.RoleExistsAsync("Admin");
 
+            if (!alreadySeeded)
+            {
             await roleManager.CreateAsync(new IdentityRole("Admin"));
             await roleManager.CreateAsync(new IdentityRole("Supermarket"));
             await roleManager.CreateAsync(new IdentityRole("Customer"));
@@ -438,8 +440,8 @@ namespace NearGo.Data
                 });
             }
             context.Vouchers.AddRange(vouchers);
-
             await context.SaveChangesAsync();
+            }
         }
     }
 }

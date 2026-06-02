@@ -177,6 +177,12 @@
                                             <i class="fas fa-store w-5 text-primary-500"></i> Siêu thị theo dõi
                                         </a>
                                     }
+                                    @if (User.IsInRole("Customer"))
+                                    {
+                                        <a href="/customer/reports" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            <i class="fas fa-flag w-5 text-orange-500"></i> Báo cáo
+                                        </a>
+                                    }
                                     <a asp-page="/Auth/ChangePassword" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
                                         <i class="fas fa-lock w-5 text-gray-400"></i> Đổi mật khẩu
                                     </a>

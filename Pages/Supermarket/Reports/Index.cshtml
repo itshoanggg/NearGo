@@ -1,0 +1,61 @@
+@page
+@model NearGo.Pages.Supermarket.Reports.IndexModel
+@{
+    ViewData["Title"] = "Báo cáo & giải trình";
+    Layout = "_SupermarketLayout";
+}
+<div class="space-y-6">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Báo cáo & giải trình</h2>
+    @if (!Model.Reports.Any())
+    {
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+            <i class="fas fa-check-circle text-4xl text-green-300 dark:text-green-600 mb-3"></i>
+            <p class="text-gray-500">Không có báo cáo nào về siêu thị của bạn</p>
+        </div>
+    }
+    else
+    {
+        <div class="space-y-3">
+            @foreach (var r in Model.Reports)
+            {
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">@r.Title</h3>
+                            <p class="text-xs text-gray-400">Báo cáo lúc: @r.CreatedAt.ToVietnamTime().ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                        <span class="px-2 py-0.5 text-xs rounded-full @(r.Status == "Pending" ? "bg-yellow-100 text-yellow-600" : r.Status == "Resolved" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")">
+                            @(r.Status == "Pending" ? "Chờ xử lý" : r.Status == "Resolved" ? "Đã giải quyết" : "Đã từ chối")
+                        </span>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        @r.Description
+                    </div>
+                    @if (string.IsNullOrEmpty(r.SupermarketExplanation) && r.Status == "Pending")
+                    {
+                        <div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
+                            <p class="text-xs font-medium text-amber-600 dark:text-amber-400 mb-2">
+                                <i class="fas @(r.RequestedExplanation ? "fa-clock" : "fa-comment") mr-1"></i>
+                                @(r.RequestedExplanation ? "Admin yêu cầu giải trình" : "Bạn có thể giải trình về báo cáo này")
+                            </p>
+                            <form method="post" asp-page-handler="SubmitExplanation">
+                                <input type="hidden" name="id" value="@r.Id" />
+                                <textarea name="explanation" rows="3" class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 outline-none text-sm mb-2" placeholder="Nhập giải trình của bạn..."></textarea>
+                                <button type="submit" class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-xl hover:bg-primary-700">
+                                    <i class="fas fa-paper-plane mr-1"></i> Gửi giải trình
+                                </button>
+                            </form>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(r.SupermarketExplanation))
+                    {
+                        <div class="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl">
+                            <p class="text-xs font-medium text-green-600 dark:text-green-400 mb-1"><i class="fas fa-check mr-1"></i> Bạn đã giải trình</p>
+                            <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">@r.SupermarketExplanation</p>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>

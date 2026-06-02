@@ -167,6 +167,7 @@ namespace NearGo.Services
                 .Include(o => o.Supermarket)
                 .Include(o => o.PaymentTransaction)
                 .Include(o => o.Voucher)
+                .Include(o => o.SupermarketRating)
                 .FirstOrDefaultAsync(o => o.Id == orderId);
         }
 

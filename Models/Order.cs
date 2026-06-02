@@ -29,5 +29,6 @@ namespace NearGo.Models
         public Voucher? Voucher { get; set; }
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
         public PaymentTransaction? PaymentTransaction { get; set; }
+        public SupermarketRating? SupermarketRating { get; set; }
     }
 }

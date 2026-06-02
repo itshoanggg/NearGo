@@ -1,0 +1,43 @@
+@page
+@model NearGo.Pages.Customer.Reports.IndexModel
+@{
+    ViewData["Title"] = "Báo cáo của tôi";
+    Layout = "_CustomerLayout";
+}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Báo cáo của tôi</h2>
+        <a href="/customer/reports/create" class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-xl hover:bg-primary-700">
+            <i class="fas fa-plus mr-1"></i> Tạo báo cáo
+        </a>
+    </div>
+    @if (!Model.Reports.Any())
+    {
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+            <i class="fas fa-flag text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
+            <p class="text-gray-500">Bạn chưa có báo cáo nào</p>
+        </div>
+    }
+    else
+    {
+        <div class="space-y-3">
+            @foreach (var r in Model.Reports)
+            {
+                <a href="/customer/reports/detail?id=@r.Id" class="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="text-sm font-semibold text-gray-900 dark:text-white truncate">@r.Title</h3>
+                                <span class="px-2 py-0.5 text-xs rounded-full @(r.Status == "Pending" ? "bg-yellow-100 text-yellow-600" : r.Status == "Resolved" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")">@(r.Status == "Pending" ? "Chờ xử lý" : r.Status == "Resolved" ? "Đã giải quyết" : "Đã từ chối")</span>
+                            </div>
+                            <p class="text-xs text-gray-400">Gửi lúc: @r.CreatedAt.ToVietnamTime().ToString("dd/MM/yyyy HH:mm")</p>
+                            <div class="mt-2 flex items-center gap-2 text-xs text-primary-500">
+                                <i class="fas fa-eye"></i> Xem chi tiết
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</div>

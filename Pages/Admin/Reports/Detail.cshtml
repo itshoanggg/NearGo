@@ -1,0 +1,93 @@
+@page
+@model NearGo.Pages.Admin.Reports.DetailModel
+@{
+    ViewData["Title"] = "Chi tiết báo cáo";
+    Layout = "_AdminLayout";
+}
+<div class="max-w-4xl mx-auto space-y-6">
+    <a href="/admin/reports" class="text-sm text-primary-500 hover:text-primary-600"><i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách</a>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">@Model.Report.Title</h2>
+                <p class="text-xs text-gray-400 mt-1">Ngày tạo: @Model.Report.CreatedAt.ToVietnamTime().ToString("dd/MM/yyyy HH:mm")</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-medium @(Model.Report.Status == "Pending" ? "bg-yellow-100 text-yellow-600" : Model.Report.Status == "Resolved" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")">
+                @(Model.Report.Status == "Pending" ? "Chờ xử lý" : Model.Report.Status == "Resolved" ? "Đã giải quyết" : "Đã từ chối")
+            </span>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl text-sm">
+            <div>
+                <p class="text-gray-400">Người báo cáo</p>
+                <p class="text-gray-900 dark:text-white font-medium">@(Model.Report.Reporter?.FullName ?? "N/A")</p>
+                <p class="text-xs text-gray-500">Email: @(Model.Report.Reporter?.Email ?? "N/A")</p>
+                <p class="text-xs text-gray-500">SĐT: @(Model.Report.Reporter?.PhoneNumber ?? "N/A")</p>
+            </div>
+            <div>
+                <p class="text-gray-400">Siêu thị</p>
+                <p class="text-gray-900 dark:text-white font-medium">@(Model.Report.Supermarket?.Name ?? "Không có")</p>
+            </div>
+        </div>
+        <div class="mb-6">
+            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nội dung báo cáo</h4>
+            <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">@Model.Report.Description</div>
+        </div>
+        @if (Model.Report.RequestedExplanation)
+        {
+            <div class="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700">
+                <h4 class="text-sm font-medium text-amber-700 dark:text-amber-400 mb-2"><i class="fas fa-clock mr-1"></i> Yêu cầu giải trình</h4>
+                @if (!string.IsNullOrEmpty(Model.Report.SupermarketExplanation))
+                {
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Đã yêu cầu: @Model.Report.ExplanationRequestedAt?.ToVietnamTime().ToString("dd/MM/yyyy HH:mm")</p>
+                    <div class="p-3 bg-white dark:bg-gray-800 rounded-lg mt-2">
+                        <p class="text-xs font-medium text-gray-500 mb-1">Giải trình từ siêu thị:</p>
+                        <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">@Model.Report.SupermarketExplanation</p>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-sm text-amber-600">Đã yêu cầu siêu thị giải trình nhưng chưa có phản hồi.</p>
+                }
+            </div>
+        }
+        @if (Model.Report.Status == "Pending")
+        {
+            <div class="border-t border-gray-100 dark:border-gray-700 pt-6 space-y-4">
+                <form method="post" asp-page-handler="Respond">
+                    <input type="hidden" name="id" value="@Model.Report.Id" />
+                    <div class="mb-4">
+                        <label for="adminResponse" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phản hồi của Admin</label>
+                        <textarea id="adminResponse" name="adminResponse" rows="4" class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 outline-none text-sm" placeholder="Nhập phản hồi..."></textarea>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="submit" name="action" value="resolve" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700">
+                            <i class="fas fa-check mr-1"></i> Giải quyết
+                        </button>
+                        <button type="submit" name="action" value="reject" class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700">
+                            <i class="fas fa-times mr-1"></i> Từ chối
+                        </button>
+                    </div>
+                </form>
+                @if (Model.Report.SupermarketId.HasValue && !Model.Report.RequestedExplanation)
+                {
+                    <form method="post" asp-page-handler="RequestExplanation">
+                        <input type="hidden" name="id" value="@Model.Report.Id" />
+                        <button type="submit" class="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-xl hover:bg-amber-700">
+                            <i class="fas fa-question-circle mr-1"></i> Yêu cầu siêu thị giải trình
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+        else
+        {
+            if (!string.IsNullOrEmpty(Model.Report.AdminResponse))
+            {
+                <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
+                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phản hồi từ Admin:</h4>
+                    <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">@Model.Report.AdminResponse</div>
+                </div>
+            }
+        }
+    </div>
+</div>

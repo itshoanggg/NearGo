@@ -71,4 +71,36 @@
             }
         </div>
     }
+    @if (Model.Ratings.Any())
+    {
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 mt-8">Đánh giá từ khách hàng (@Model.Supermarket.ReviewCount)</h2>
+        <div class="space-y-3">
+            @foreach (var r in Model.Ratings)
+            {
+                <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-start gap-3">
+                        <div class="w-9 h-9 bg-primary-600 rounded-lg flex items-center justify-center text-white text-sm font-bold shrink-0">
+                            @(r.User?.FullName?.FirstOrDefault() ?? '?')
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">@(r.User?.FullName ?? "Ẩn danh")</p>
+                                <span class="text-xs text-gray-400">@r.CreatedAt.ToVietnamTime().ToString("dd/MM/yyyy")</span>
+                            </div>
+                            <div class="flex items-center gap-0.5 mb-2">
+                                @for (int i = 0; i < 5; i++)
+                                {
+                                    <i class="fas fa-star text-xs @(i < r.Rating ? "text-yellow-400" : "text-gray-200 dark:text-gray-600")"></i>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(r.Comment))
+                            {
+                                <p class="text-sm text-gray-600 dark:text-gray-400">@r.Comment</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
 </div>

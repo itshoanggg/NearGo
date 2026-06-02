@@ -25,6 +25,8 @@ namespace NearGo.Data
         public DbSet<Subscription> Subscriptions => Set<Subscription>();
         public DbSet<PlatformFee> PlatformFees => Set<PlatformFee>();
         public DbSet<PendingCheckout> PendingCheckouts => Set<PendingCheckout>();
+        public DbSet<SupermarketRating> SupermarketRatings => Set<SupermarketRating>();
+        public DbSet<Report> Reports => Set<Report>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -131,6 +133,20 @@ namespace NearGo.Data
             builder.Entity<ChatMessage>(e =>
             {
                 e.HasOne(cm => cm.User).WithMany().HasForeignKey(cm => cm.UserId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            builder.Entity<SupermarketRating>(e =>
+            {
+                e.HasOne(sr => sr.Order).WithOne(o => o.SupermarketRating).HasForeignKey<SupermarketRating>(sr => sr.OrderId).OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(sr => sr.User).WithMany(u => u.SupermarketRatings).HasForeignKey(sr => sr.UserId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(sr => sr.Supermarket).WithMany(s => s.SupermarketRatings).HasForeignKey(sr => sr.SupermarketId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<Report>(e =>
+            {
+                e.HasOne(r => r.Reporter).WithMany(u => u.Reports).HasForeignKey(r => r.ReporterId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(r => r.Supermarket).WithMany(s => s.Reports).HasForeignKey(r => r.SupermarketId).OnDelete(DeleteBehavior.SetNull);
+                e.HasOne(r => r.Admin).WithMany().HasForeignKey(r => r.AdminId).OnDelete(DeleteBehavior.SetNull);
             });
 
             builder.Entity<AppUser>(e =>

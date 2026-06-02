@@ -26,5 +26,7 @@ namespace NearGo.Models
         public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
         public ICollection<PlatformFee> PlatformFees { get; set; } = new List<PlatformFee>();
         public ICollection<AppUser> Followers { get; set; } = new List<AppUser>();
+        public ICollection<SupermarketRating> SupermarketRatings { get; set; } = new List<SupermarketRating>();
+        public ICollection<Report> Reports { get; set; } = new List<Report>();
     }
 }

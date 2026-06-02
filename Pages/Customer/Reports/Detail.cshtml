@@ -1,0 +1,43 @@
+@page
+@model NearGo.Pages.Customer.Reports.DetailModel
+@{
+    ViewData["Title"] = "Chi tiết báo cáo";
+    Layout = "_CustomerLayout";
+}
+<div class="max-w-3xl mx-auto space-y-6">
+    <a href="/customer/reports" class="text-sm text-primary-500 hover:text-primary-600"><i class="fas fa-arrow-left mr-1"></i> Quay lại</a>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">@Model.Report.Title</h2>
+                <p class="text-xs text-gray-400 mt-1">Gửi lúc: @Model.Report.CreatedAt.ToVietnamTime().ToString("dd/MM/yyyy HH:mm")</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-medium @(Model.Report.Status == "Pending" ? "bg-yellow-100 text-yellow-600" : Model.Report.Status == "Resolved" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")">
+                @(Model.Report.Status == "Pending" ? "Chờ xử lý" : Model.Report.Status == "Resolved" ? "Đã giải quyết" : "Đã từ chối")
+            </span>
+        </div>
+        <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl text-sm">
+            <p class="text-gray-400 mb-1">Siêu thị liên quan:</p>
+            <p class="text-gray-900 dark:text-white font-medium">@(Model.Report.Supermarket?.Name ?? "Không có")</p>
+        </div>
+        <div class="mb-6">
+            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nội dung báo cáo</h4>
+            <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">@Model.Report.Description</div>
+        </div>
+        @if (Model.Report.RequestedExplanation && !string.IsNullOrEmpty(Model.Report.SupermarketExplanation))
+        {
+            <div class="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700">
+                <h4 class="text-sm font-medium text-amber-700 dark:text-amber-400 mb-2"><i class="fas fa-store mr-1"></i> Giải trình từ siêu thị</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Ngày gửi: @(Model.Report.ExplanationProvidedAt?.ToVietnamTime().ToString("dd/MM/yyyy HH:mm") ?? "N/A")</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">@Model.Report.SupermarketExplanation</p>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(Model.Report.AdminResponse))
+        {
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
+                <h4 class="text-sm font-medium text-blue-700 dark:text-blue-400 mb-1"><i class="fas fa-shield-halved mr-1"></i> Phản hồi từ Admin</h4>
+                <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">@Model.Report.AdminResponse</p>
+            </div>
+        }
+    </div>
+</div>

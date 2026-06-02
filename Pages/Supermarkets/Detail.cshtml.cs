@@ -20,6 +20,7 @@ namespace NearGo.Pages.Supermarkets
 
         public NearGo.Models.Supermarket? Supermarket { get; set; }
         public List<Product> Products { get; set; } = new();
+        public List<SupermarketRating> Ratings { get; set; } = new();
         public bool IsFollowing { get; set; }
 
         public async Task<IActionResult> OnGetAsync(string slug)
@@ -39,6 +40,13 @@ namespace NearGo.Pages.Supermarkets
             Products = await _context.Products
                 .Where(p => p.SupermarketId == Supermarket.Id && p.IsActive && p.StockQuantity > 0 && p.ExpiryDate > now)
                 .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            Ratings = await _context.SupermarketRatings
+                .Include(r => r.User)
+                .Where(r => r.SupermarketId == Supermarket.Id)
+                .OrderByDescending(r => r.CreatedAt)
+                .Take(20)
                 .ToListAsync();
 
             return Page();

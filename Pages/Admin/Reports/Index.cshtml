@@ -1,0 +1,79 @@
+@page
+@model NearGo.Pages.Admin.Reports.IndexModel
+@{
+    ViewData["Title"] = "Quản lý báo cáo";
+    Layout = "_AdminLayout";
+}
+<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Báo cáo (@Model.TotalCount)</h2>
+        <div class="flex gap-1">
+            <a href="/admin/reports" class="px-3 py-1.5 text-sm rounded-lg @(string.IsNullOrEmpty(Model.Filter) ? "bg-primary-500 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300")">Tất cả</a>
+            <a href="/admin/reports?filter=pending" class="px-3 py-1.5 text-sm rounded-lg @(Model.Filter == "pending" ? "bg-yellow-500 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300")">Chờ xử lý</a>
+            <a href="/admin/reports?filter=resolved" class="px-3 py-1.5 text-sm rounded-lg @(Model.Filter == "resolved" ? "bg-green-500 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300")">Đã giải quyết</a>
+        </div>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-left text-gray-500 border-b border-gray-100 dark:border-gray-700">
+                    <th class="pb-3 font-medium">Tiêu đề</th>
+                    <th class="pb-3 font-medium">Người báo cáo</th>
+                    <th class="pb-3 font-medium">Siêu thị</th>
+                    <th class="pb-3 font-medium">Trạng thái</th>
+                    <th class="pb-3 font-medium">Ngày tạo</th>
+                    <th class="pb-3 font-medium">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Reports.Any())
+                {
+                    <tr><td colspan="6" class="py-8 text-center text-gray-400">Không có báo cáo nào</td></tr>
+                }
+                @foreach (var r in Model.Reports)
+                {
+                    <tr class="border-b border-gray-50 dark:border-gray-800">
+                        <td class="py-3">
+                            <span class="text-gray-900 dark:text-white font-medium">@r.Title</span>
+                            @if (r.RequestedExplanation && string.IsNullOrEmpty(r.SupermarketExplanation))
+                            {
+                                <span class="ml-2 px-1.5 py-0.5 text-xs bg-amber-100 text-amber-600 rounded">Đã yêu cầu</span>
+                            }
+                        </td>
+                        <td class="py-3 text-gray-500">@(r.Reporter?.Email ?? r.ReporterId)</td>
+                        <td class="py-3 text-gray-500">@(r.Supermarket?.Name ?? "—")</td>
+                        <td class="py-3">
+                            <span class="px-2 py-0.5 rounded-full text-xs @(r.Status == "Pending" ? "bg-yellow-100 text-yellow-600" : r.Status == "Resolved" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")">
+                                @(r.Status == "Pending" ? "Chờ xử lý" : r.Status == "Resolved" ? "Đã giải quyết" : "Đã từ chối")
+                            </span>
+                        </td>
+                        <td class="py-3 text-gray-400 text-xs">@r.CreatedAt.ToVietnamTime().ToString("dd/MM/yyyy")</td>
+                        <td class="py-3">
+                            <a href="/admin/reports/detail?id=@r.Id" class="px-3 py-1 text-xs bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200">Chi tiết</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="flex items-center justify-between mt-4">
+            <span class="text-sm text-gray-500">Tổng số @Model.TotalCount báo cáo</span>
+            <div class="flex gap-1">
+                @if (Model.CurrentPage > 1)
+                {
+                    <a href="/admin/reports?filter=@Model.Filter&p=@(Model.CurrentPage - 1)" class="px-3 py-1.5 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">&laquo;</a>
+                }
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <a href="/admin/reports?filter=@Model.Filter&p=@i" class="px-3 py-1.5 text-sm rounded-lg @(i == Model.CurrentPage ? "bg-primary-500 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300")">@i</a>
+                }
+                @if (Model.CurrentPage < Model.TotalPages)
+                {
+                    <a href="/admin/reports?filter=@Model.Filter&p=@(Model.CurrentPage + 1)" class="px-3 py-1.5 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">&raquo;</a>
+                }
+            </div>
+        </div>
+    }
+</div>
