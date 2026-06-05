@@ -338,13 +338,17 @@ app.MapFallbackToPage("/NotFound");
 
 try
 {
-    Log.Information("Starting NearGo application");
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await context.Database.MigrateAsync();
+    Log.Information("Database migrated successfully");
+
     await SeedData.Initialize(app.Services);
-    Log.Information("Database seeded successfully");
+    Log.Information("Seed data initialized");
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Failed to seed database");
+    Log.Fatal(ex, "Failed to initialize database");
     throw;
 }
 
