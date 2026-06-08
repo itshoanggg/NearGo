@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using NearGo.Data;
 using NearGo.Models;
+using NearGo.Services;
 
 namespace NearGo.Pages.Supermarket
 {
@@ -13,11 +14,13 @@ namespace NearGo.Pages.Supermarket
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
+        private readonly FinanceService _financeService;
 
-        public DashboardModel(ApplicationDbContext context, UserManager<AppUser> userManager)
+        public DashboardModel(ApplicationDbContext context, UserManager<AppUser> userManager, FinanceService financeService)
         {
             _context = context;
             _userManager = userManager;
+            _financeService = financeService;
         }
 
         public NearGo.Models.Supermarket? Supermarket { get; set; }
@@ -25,7 +28,7 @@ namespace NearGo.Pages.Supermarket
         public decimal Balance { get; set; }
         public int TotalOrders { get; set; }
         public int TotalProducts { get; set; }
-        public int ProductsThisMonth { get; set; }
+        public decimal CommissionPercent { get; set; }
         public List<Order> RecentOrders { get; set; } = new();
         public List<Product> TopProducts { get; set; } = new();
 
@@ -38,20 +41,23 @@ namespace NearGo.Pages.Supermarket
             if (Supermarket == null) return;
 
             Balance = Supermarket.Balance;
+            CommissionPercent = Supermarket.SubscriptionTier == "Premium" ? 5m : 10m;
 
-            TotalRevenue = await _context.Orders
+            var totalGross = await _context.Orders
                 .Where(o => o.SupermarketId == Supermarket.Id && o.PaymentStatus == "Paid" && o.Status != "Cancelled")
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+
+            var totalCommission = await _context.PlatformFees
+                .Where(f => f.SupermarketId == Supermarket.Id && f.FeeType == "Commission" && f.Status == "Paid")
+                .SumAsync(f => (decimal?)f.Amount) ?? 0;
+
+            TotalRevenue = totalGross - totalCommission;
 
             TotalOrders = await _context.Orders
                 .CountAsync(o => o.SupermarketId == Supermarket.Id && o.Status != "Cancelled");
 
             TotalProducts = await _context.Products
                 .CountAsync(p => p.SupermarketId == Supermarket.Id);
-
-            var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-            ProductsThisMonth = await _context.Products
-                .CountAsync(p => p.SupermarketId == Supermarket.Id && p.CreatedAt >= startOfMonth);
 
             RecentOrders = await _context.Orders
                 .Include(o => o.Customer)

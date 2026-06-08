@@ -5,18 +5,22 @@
     Layout = "_SupermarketLayout";
 }
 <div class="space-y-6">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p class="text-sm text-gray-500 mb-1">Doanh thu thuần</p>
+            <p class="text-2xl font-bold text-green-600">@Model.TotalRevenue.ToString("N0")đ</p>
+        </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
             <p class="text-sm text-gray-500 mb-1">Tổng doanh thu</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">@Model.TotalRevenue.ToString("N0")đ</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">@Model.GrossRevenue.ToString("N0")đ</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
             <p class="text-sm text-gray-500 mb-1">Đơn đã thanh toán</p>
             <p class="text-2xl font-bold text-gray-900 dark:text-white">@Model.PaidOrders</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
-            <p class="text-sm text-gray-500 mb-1">Phí nền tảng</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">@Model.TotalFees.ToString("N0")đ</p>
+            <p class="text-sm text-gray-500 mb-1">Phí hoa hồng</p>
+            <p class="text-2xl font-bold text-accent-600">@Model.TotalCommission.ToString("N0")đ</p>
         </div>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">

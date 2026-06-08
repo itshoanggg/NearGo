@@ -1,0 +1,113 @@
+@page
+@model NearGo.Pages.Supermarket.ProfileModel
+@{
+    ViewData["Title"] = "Thông tin siêu thị";
+    Layout = "_SupermarketLayout";
+}
+<div class="space-y-6">
+    <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-white">
+        <h2 class="text-xl font-bold">Thông tin siêu thị</h2>
+        <p class="text-white/70 text-sm mt-1">Cập nhật thông tin và hình ảnh cho siêu thị của bạn</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            <div asp-validation-summary="ModelOnly" class="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-xl p-3"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Logo siêu thị</label>
+                    <div class="flex items-center gap-4">
+                        <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center overflow-hidden">
+                            <i class="fas fa-store text-gray-400 text-2xl" id="logoPlaceholder"></i>
+                            <img id="logoPreview" class="w-full h-full object-cover hidden" />
+                            @if (!string.IsNullOrEmpty(Model.Supermarket?.LogoUrl))
+                            {
+                                <img src="@Model.Supermarket.LogoUrl" id="logoExisting" class="w-full h-full object-cover" />
+                            }
+                        </div>
+                        <label class="cursor-pointer">
+                            <input asp-for="Input.LogoFile" accept="image/*" class="hidden" onchange="previewImage(this, 'logoPreview', 'logoPlaceholder', 'logoExisting')" />
+                            <div class="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 text-center">
+                                <i class="fas fa-camera mr-1"></i> Đổi logo
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Ảnh bìa</label>
+                    <div class="flex items-center gap-4">
+                        <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center overflow-hidden">
+                            <i class="fas fa-image text-gray-400 text-2xl" id="coverPlaceholder"></i>
+                            <img id="coverPreview" class="w-full h-full object-cover hidden" />
+                            @if (!string.IsNullOrEmpty(Model.Supermarket?.CoverImageUrl))
+                            {
+                                <img src="@Model.Supermarket.CoverImageUrl" id="coverExisting" class="w-full h-full object-cover" />
+                            }
+                        </div>
+                        <label class="cursor-pointer">
+                            <input asp-for="Input.CoverFile" accept="image/*" class="hidden" onchange="previewImage(this, 'coverPreview', 'coverPlaceholder', 'coverExisting')" />
+                            <div class="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 text-center">
+                                <i class="fas fa-camera mr-1"></i> Đổi ảnh bìa
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label asp-for="Input.Name" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Tên siêu thị</label>
+                    <input asp-for="Input.Name" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" />
+                    <span asp-validation-for="Input.Name" class="text-xs text-red-500"></span>
+                </div>
+                <div>
+                    <label asp-for="Input.Phone" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Số điện thoại</label>
+                    <input asp-for="Input.Phone" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" />
+                    <span asp-validation-for="Input.Phone" class="text-xs text-red-500"></span>
+                </div>
+                <div>
+                    <label asp-for="Input.Address" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Địa chỉ</label>
+                    <input asp-for="Input.Address" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" />
+                    <span asp-validation-for="Input.Address" class="text-xs text-red-500"></span>
+                </div>
+                <div>
+                    <label asp-for="Input.TaxCode" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Mã số thuế</label>
+                    <input asp-for="Input.TaxCode" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" />
+                </div>
+            </div>
+
+            <div>
+                <label asp-for="Input.Description" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Mô tả</label>
+                <textarea asp-for="Input.Description" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" rows="4"></textarea>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="submit" class="px-6 py-2.5 bg-primary-500 text-white font-medium rounded-xl hover:bg-primary-600 transition-colors">
+                    <i class="fas fa-save mr-1"></i> Lưu thay đổi
+                </button>
+                <a href="/supermarket/dashboard" class="px-6 py-2.5 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    Hủy
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function previewImage(input, imgId, placeholderId, existingId) {
+        var img = document.getElementById(imgId);
+        var placeholder = document.getElementById(placeholderId);
+        var existing = document.getElementById(existingId);
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                if (existing) existing.classList.add('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>

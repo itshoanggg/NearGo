@@ -30,7 +30,6 @@ namespace NearGo.Pages.Supermarket
         public string? BankName { get; set; }
         public string? AccountNumber { get; set; }
         public string? AccountHolder { get; set; }
-        public decimal DefaultCommissionPercent { get; set; }
         public List<WithdrawalRequest> Withdrawals { get; set; } = new();
 
         [BindProperty]
@@ -46,7 +45,6 @@ namespace NearGo.Pages.Supermarket
             if (supermarket == null) return;
 
             Balance = supermarket.Balance;
-            DefaultCommissionPercent = _financeService.DefaultCommissionPercent;
 
             var bankInfo = await _context.SupermarketBankInfos.FirstOrDefaultAsync(b => b.SupermarketId == smId);
             HasBankInfo = bankInfo != null;

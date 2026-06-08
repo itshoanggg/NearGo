@@ -103,20 +103,6 @@ namespace NearGo.Pages.Supermarket.Products
             var supermarket = await _context.Supermarkets.FindAsync(user.SupermarketId.Value);
             if (supermarket == null) return Forbid();
 
-            if (supermarket.SubscriptionTier == "Free")
-            {
-                var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-                var productsThisMonth = await _context.Products
-                    .CountAsync(p => p.SupermarketId == user.SupermarketId.Value && p.CreatedAt >= startOfMonth);
-
-                if (productsThisMonth >= 10)
-                {
-                    ModelState.AddModelError(string.Empty, "Bạn đã đạt giới hạn 10 sản phẩm/tháng ở gói Free. Vui lòng nâng cấp lên Premium để đăng không giới hạn.");
-                    Categories = await _context.Categories.Where(c => c.IsActive).OrderBy(c => c.SortOrder).ToListAsync();
-                    return Page();
-                }
-            }
-
             var discountedPrice = Input.DiscountedPrice > 0 ? Input.DiscountedPrice : Input.OriginalPrice;
             var discountPct = Input.OriginalPrice > 0 ? (double)((Input.OriginalPrice - discountedPrice) / Input.OriginalPrice * 100) : 0;
 

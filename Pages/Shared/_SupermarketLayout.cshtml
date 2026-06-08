@@ -1,3 +1,5 @@
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext SupermarketDbContext
 @{
     Layout = "_Layout";
 }
@@ -7,11 +9,19 @@
             <div class="p-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-center">
                 @{
                     var user = await UserManager.GetUserAsync(User);
+                    var supermarket = user != null ? await SupermarketDbContext.Supermarkets.FindAsync(user.SupermarketId) : null;
                 }
-                <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                    <i class="fas fa-store text-2xl"></i>
+                <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-2 overflow-hidden">
+                    @if (!string.IsNullOrEmpty(supermarket?.LogoUrl))
+                    {
+                        <img src="@supermarket.LogoUrl" alt="Logo" class="w-full h-full object-cover" />
+                    }
+                    else
+                    {
+                        <i class="fas fa-store text-2xl"></i>
+                    }
                 </div>
-                <p class="font-semibold text-sm">Quản lý siêu thị</p>
+                <p class="font-semibold text-sm">@(supermarket?.Name ?? "Quản lý siêu thị")</p>
                 <p class="text-white/60 text-xs">@user?.Email</p>
             </div>
             <nav class="p-2 space-y-1">
@@ -36,6 +46,12 @@
                 <hr class="border-gray-100 dark:border-gray-700 my-2" />
                 <a href="/supermarket/upgrade" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm @(Context.Request.Path == "/supermarket/upgrade" ? "bg-primary-50 dark:bg-primary-900/20 text-primary-600 font-medium" : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700")">
                     <i class="fas fa-crown w-5"></i> Nâng cấp gói
+                </a>
+                <a href="/supermarket/profile" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm @(Context.Request.Path == "/supermarket/profile" ? "bg-primary-50 dark:bg-primary-900/20 text-primary-600 font-medium" : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700")">
+                    <i class="fas fa-store-alt w-5"></i> Thông tin siêu thị
+                </a>
+                <a href="/supermarket/bankinfo" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm @(Context.Request.Path.StartsWithSegments("/supermarket/bankinfo") ? "bg-primary-50 dark:bg-primary-900/20 text-primary-600 font-medium" : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700")">
+                    <i class="fas fa-university w-5"></i> Tài khoản ngân hàng
                 </a>
                 <a asp-page="/Auth/ChangePassword" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                     <i class="fas fa-lock w-5"></i> Đổi mật khẩu

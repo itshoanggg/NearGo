@@ -24,7 +24,6 @@ namespace NearGo.Pages.Supermarket
         }
 
         public NearGo.Models.Supermarket? Supermarket { get; set; }
-        public int ProductsThisMonth { get; set; }
 
         public async Task OnGetAsync()
         {
@@ -32,11 +31,6 @@ namespace NearGo.Pages.Supermarket
             if (user?.SupermarketId == null) return;
 
             Supermarket = await _context.Supermarkets.FindAsync(user.SupermarketId.Value);
-            if (Supermarket == null) return;
-
-            var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-            ProductsThisMonth = await _context.Products
-                .CountAsync(p => p.SupermarketId == Supermarket.Id && p.CreatedAt >= startOfMonth);
         }
 
         public async Task<IActionResult> OnPostAsync()

@@ -27,8 +27,6 @@
                             <th class="p-4 font-medium">ID</th>
                             <th class="p-4 font-medium">Siêu thị</th>
                             <th class="p-4 font-medium">Số tiền</th>
-                            <th class="p-4 font-medium">Hoa hồng</th>
-                            <th class="p-4 font-medium">Thực nhận</th>
                             <th class="p-4 font-medium">Trạng thái</th>
                             <th class="p-4 font-medium">Ngày yêu cầu</th>
                             <th class="p-4 font-medium">Thao tác</th>
@@ -49,8 +47,6 @@
                                     </div>
                                 </td>
                                 <td class="p-4 text-gray-900 dark:text-white font-medium">@w.Amount.ToString("N0")đ</td>
-                                <td class="p-4 text-red-500">@w.CommissionAmount.ToString("N0")đ (@w.CommissionPercent%)</td>
-                                <td class="p-4 text-green-600 font-medium">@w.FinalAmount.ToString("N0")đ</td>
                                 <td class="p-4">
                                     @if (w.Status == "Pending")
                                     {

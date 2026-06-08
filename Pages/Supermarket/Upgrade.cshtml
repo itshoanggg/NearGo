@@ -38,17 +38,23 @@
         </div>
 
         <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center justify-between mb-3">
-                <div>
-                    <p class="text-sm text-gray-500">Sản phẩm đã đăng tháng này</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">@Model.ProductsThisMonth <span class="text-sm font-normal text-gray-400">/ 10</span></p>
+            <div class="flex items-center gap-4 mb-3">
+                <div class="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-500"></i>
                 </div>
-                <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-box text-amber-500"></i>
+                <div>
+                    <p class="text-sm text-gray-500">Đăng sản phẩm</p>
+                    <p class="text-lg font-bold text-gray-900 dark:text-white">Không giới hạn</p>
                 </div>
             </div>
-            <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                <div class="bg-amber-500 h-2 rounded-full" style="width: @(Math.Min(Model.ProductsThisMonth * 10, 100))%"></div>
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-percentage text-accent-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Phí hoa hồng</p>
+                    <p class="text-lg font-bold text-gray-900 dark:text-white">10% <span class="text-sm font-normal text-gray-400">/ đơn hàng</span></p>
+                </div>
             </div>
         </div>
 
@@ -66,6 +72,9 @@
             <ul class="space-y-3 mb-6">
                 <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
                     <i class="fas fa-check-circle text-green-500 w-5"></i> Đăng sản phẩm không giới hạn
+                </li>
+                <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                    <i class="fas fa-check-circle text-green-500 w-5"></i> Phí hoa hồng chỉ <strong>5%</strong> (thay vì 10%)
                 </li>
                 <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
                     <i class="fas fa-check-circle text-green-500 w-5"></i> Ưu tiên hiển thị sản phẩm

@@ -17,8 +17,37 @@
             <p class="text-gray-500 dark:text-gray-400 mt-1">Tham gia NearGo để bán sản phẩm cận date</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-gray-900/50 p-8">
-            <form method="post" class="space-y-4">
+            <form method="post" enctype="multipart/form-data" class="space-y-4">
                 <div asp-validation-summary="ModelOnly" class="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-xl p-3"></div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Logo siêu thị</label>
+                        <div class="flex items-center gap-3">
+                            <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center overflow-hidden" id="logoPreviewContainer">
+                                <i class="fas fa-store text-gray-400 text-xl" id="logoPlaceholder"></i>
+                                <img id="logoPreview" class="w-full h-full object-cover hidden" />
+                            </div>
+                            <label class="flex-1 cursor-pointer">
+                                <input asp-for="Input.LogoFile" accept="image/*" class="hidden" onchange="previewImage(this, 'logoPreview', 'logoPlaceholder')" />
+                                <div class="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 text-center">Chọn ảnh</div>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Ảnh bìa</label>
+                        <div class="flex items-center gap-3">
+                            <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center overflow-hidden" id="coverPreviewContainer">
+                                <i class="fas fa-image text-gray-400 text-xl" id="coverPlaceholder"></i>
+                                <img id="coverPreview" class="w-full h-full object-cover hidden" />
+                            </div>
+                            <label class="flex-1 cursor-pointer">
+                                <input asp-for="Input.CoverFile" accept="image/*" class="hidden" onchange="previewImage(this, 'coverPreview', 'coverPlaceholder')" />
+                                <div class="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 text-center">Chọn ảnh</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
 
                 <div>
                     <label asp-for="Input.SupermarketName" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Tên siêu thị</label>
@@ -83,3 +112,19 @@
         </div>
     </div>
 </div>
+
+<script>
+    function previewImage(input, imgId, placeholderId) {
+        var img = document.getElementById(imgId);
+        var placeholder = document.getElementById(placeholderId);
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>

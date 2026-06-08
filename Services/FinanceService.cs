@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using NearGo.Configurations;
 using NearGo.Data;
 using NearGo.Models;
-using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 namespace NearGo.Services
@@ -10,26 +8,19 @@ namespace NearGo.Services
     public class FinanceService
     {
         private readonly ApplicationDbContext _context;
-        private readonly decimal _defaultCommissionPercent;
 
-        public FinanceService(ApplicationDbContext context, IOptions<FinanceSettings> financeSettings)
+        public FinanceService(ApplicationDbContext context)
         {
             _context = context;
-            _defaultCommissionPercent = financeSettings.Value.DefaultCommissionPercent;
         }
 
-        public async Task<decimal> GetCommissionPercent()
+        public async Task<decimal> GetCommissionPercentForSupermarket(int supermarketId)
         {
-            var setting = await _context.PlatformSettings
-                .FirstOrDefaultAsync(s => s.Key == "commission_percent");
-            if (setting != null && decimal.TryParse(setting.Value, out var percent))
-                return percent;
-            return _defaultCommissionPercent;
-        }
-
-        public async Task<decimal> GetCommissionPercentCached()
-        {
-            return await GetCommissionPercent();
+            var supermarket = await _context.Supermarkets
+                .Where(s => s.Id == supermarketId)
+                .Select(s => s.SubscriptionTier)
+                .FirstOrDefaultAsync();
+            return supermarket == "Premium" ? 5m : 10m;
         }
 
         public async Task AddOrderEarnings(int orderId)
@@ -41,7 +32,7 @@ namespace NearGo.Services
             if (order == null || order.PaymentMethod != "SEPay" || order.PaymentStatus != "Paid")
                 return;
 
-            var commissionPercent = _defaultCommissionPercent;
+            var commissionPercent = order.Supermarket.SubscriptionTier == "Premium" ? 5m : 10m;
             var commissionAmount = order.TotalAmount * commissionPercent / 100;
             var supermarketEarned = order.TotalAmount - commissionAmount;
 
@@ -83,17 +74,13 @@ namespace NearGo.Services
                 supermarket.BankInfo.AccountHolder
             });
 
-            var commissionPercent = await GetCommissionPercent();
-            var commissionAmount = amount * commissionPercent / 100;
-            var finalAmount = amount - commissionAmount;
-
             var request = new WithdrawalRequest
             {
                 SupermarketId = supermarketId,
                 Amount = amount,
-                CommissionPercent = commissionPercent,
-                CommissionAmount = commissionAmount,
-                FinalAmount = finalAmount,
+                CommissionPercent = 0,
+                CommissionAmount = 0,
+                FinalAmount = amount,
                 Status = "Pending",
                 BankInfoJson = bankInfoJson,
                 RequestedAt = DateTime.UtcNow,
@@ -162,17 +149,6 @@ namespace NearGo.Services
             request.ProcessedAt = DateTime.UtcNow;
             request.ApprovedById = adminId;
 
-            _context.PlatformFees.Add(new PlatformFee
-            {
-                SupermarketId = request.SupermarketId,
-                FeeType = "WithdrawalFee",
-                Amount = request.CommissionAmount,
-                Description = $"Phí rút tiền {request.CommissionPercent}% yêu cầu #{request.Id}",
-                Status = "Paid",
-                CreatedAt = DateTime.UtcNow,
-                PaidAt = DateTime.UtcNow
-            });
-
             await _context.SaveChangesAsync();
             return true;
         }
@@ -190,7 +166,6 @@ namespace NearGo.Services
                 .Where(s => s.Balance > 0 && s.BankInfo != null)
                 .ToListAsync();
 
-            var commissionPercent = await GetCommissionPercent();
             foreach (var supermarket in supermarkets)
             {
                 var bankInfoJson = JsonSerializer.Serialize(new
@@ -199,16 +174,14 @@ namespace NearGo.Services
                     supermarket.BankInfo.AccountNumber,
                     supermarket.BankInfo.AccountHolder
                 });
-                var commissionAmount = supermarket.Balance * commissionPercent / 100;
-                var finalAmount = supermarket.Balance - commissionAmount;
 
                 var request = new WithdrawalRequest
                 {
                     SupermarketId = supermarket.Id,
                     Amount = supermarket.Balance,
-                    CommissionPercent = commissionPercent,
-                    CommissionAmount = commissionAmount,
-                    FinalAmount = finalAmount,
+                    CommissionPercent = 0,
+                    CommissionAmount = 0,
+                    FinalAmount = supermarket.Balance,
                     Status = "Pending",
                     BankInfoJson = bankInfoJson,
                     RequestedAt = now,
@@ -228,8 +201,6 @@ namespace NearGo.Services
             var supermarket = await _context.Supermarkets.FindAsync(supermarketId);
             return supermarket?.Balance ?? 0;
         }
-
-        public decimal DefaultCommissionPercent => _defaultCommissionPercent;
 
         public async Task<List<WithdrawalRequest>> GetPendingWithdrawals()
         {

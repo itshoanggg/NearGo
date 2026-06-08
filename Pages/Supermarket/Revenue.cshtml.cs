@@ -21,8 +21,9 @@ namespace NearGo.Pages.Supermarket
         }
 
         public decimal TotalRevenue { get; set; }
+        public decimal GrossRevenue { get; set; }
         public int PaidOrders { get; set; }
-        public decimal TotalFees { get; set; }
+        public decimal TotalCommission { get; set; }
         public string RevenueChartData { get; set; } = "[]";
 
         public async Task OnGetAsync()
@@ -31,16 +32,18 @@ namespace NearGo.Pages.Supermarket
             if (user?.SupermarketId == null) return;
 
             var smId = user.SupermarketId.Value;
-            TotalRevenue = await _context.Orders
+            GrossRevenue = await _context.Orders
                 .Where(o => o.SupermarketId == smId && o.PaymentStatus == "Paid" && o.Status != "Cancelled")
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
 
+            TotalCommission = await _context.PlatformFees
+                .Where(f => f.SupermarketId == smId && f.FeeType == "Commission" && f.Status == "Paid")
+                .SumAsync(f => (decimal?)f.Amount) ?? 0;
+
+            TotalRevenue = GrossRevenue - TotalCommission;
+
             PaidOrders = await _context.Orders
                 .CountAsync(o => o.SupermarketId == smId && o.PaymentStatus == "Paid");
-
-            TotalFees = await _context.PlatformFees
-                .Where(f => f.SupermarketId == smId && f.Status == "Paid")
-                .SumAsync(f => (decimal?)f.Amount) ?? 0;
 
             var rng = new Random();
             var data = Enumerable.Range(0, Math.Max(1, DateTime.UtcNow.Month)).Select(_ => rng.Next(1, 10) * 1000000).ToArray();

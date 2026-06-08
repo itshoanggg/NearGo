@@ -34,25 +34,16 @@
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Số tiền muốn rút</label>
                         <div class="relative">
-                            <input type="number" id="withdrawAmount" asp-for="WithdrawAmount" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Nhập số tiền" min="10000" max="@Model.Balance" oninput="calculateFee(this.value)" />
+                            <input type="number" id="withdrawAmount" asp-for="WithdrawAmount" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Nhập số tiền" min="10000" max="@Model.Balance" />
                             <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">đ</span>
                         </div>
                         <span asp-validation-for="WithdrawAmount" class="text-red-500 text-xs"></span>
                     </div>
 
-                    <div id="feeBreakdown" class="mb-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl space-y-2 hidden">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-500">Số tiền yêu cầu</span>
-                            <span class="font-medium text-gray-900 dark:text-white" id="displayAmount">0đ</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-500">Phí hoa hồng (<span id="commissionRate">@Model.DefaultCommissionPercent</span>%)</span>
-                            <span class="font-medium text-red-500" id="displayFee">0đ</span>
-                        </div>
-                        <hr class="border-gray-200 dark:border-gray-600" />
-                        <div class="flex justify-between text-sm font-semibold">
-                            <span class="text-gray-700 dark:text-gray-200">Số tiền thực nhận</span>
-                            <span class="text-green-600" id="displayFinal">0đ</span>
+                    <div class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                        <div class="flex items-center gap-2 text-sm text-green-700 dark:text-green-300">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Rút tiền không mất phí hoa hồng</span>
                         </div>
                     </div>
 
@@ -113,7 +104,6 @@
                                 {
                                     <span class="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-600">Từ chối</span>
                                 }
-                                <p class="text-xs text-gray-400 mt-0.5">Phí: @w.CommissionAmount.ToString("N0")đ</p>
                             </div>
                         </div>
                     }
@@ -160,17 +150,4 @@
     </div>
 </div>
 
-<script>
-    var commissionRate = @Model.DefaultCommissionPercent;
 
-    function calculateFee(amount) {
-        var numAmount = parseFloat(amount) || 0;
-        var fee = Math.round(numAmount * commissionRate / 100);
-        var finalAmount = numAmount - fee;
-
-        document.getElementById('feeBreakdown').classList.remove('hidden');
-        document.getElementById('displayAmount').textContent = numAmount.toLocaleString('vi-VN') + 'đ';
-        document.getElementById('displayFee').textContent = '-' + fee.toLocaleString('vi-VN') + 'đ';
-        document.getElementById('displayFinal').textContent = finalAmount.toLocaleString('vi-VN') + 'đ';
-    }
-</script>

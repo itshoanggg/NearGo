@@ -53,6 +53,10 @@ namespace NearGo.Pages.Auth
 
             public string? Description { get; set; }
 
+            public IFormFile? LogoFile { get; set; }
+
+            public IFormFile? CoverFile { get; set; }
+
             [Required(ErrorMessage = "Mật khẩu là bắt buộc")]
             [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu phải từ 6 ký tự")]
             [DataType(DataType.Password)]
@@ -103,6 +107,12 @@ namespace NearGo.Pages.Auth
 
             var slug = GenerateSlug(Input.SupermarketName);
 
+            var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "supermarkets");
+            Directory.CreateDirectory(uploadsDir);
+
+            var logoUrl = await SaveImageAsync(Input.LogoFile, null, uploadsDir);
+            var coverUrl = await SaveImageAsync(Input.CoverFile, null, uploadsDir);
+
             var supermarket = new NearGo.Models.Supermarket
             {
                 Name = Input.SupermarketName,
@@ -112,6 +122,8 @@ namespace NearGo.Pages.Auth
                 Address = Input.Address,
                 TaxCode = Input.TaxCode,
                 Description = Input.Description,
+                LogoUrl = logoUrl,
+                CoverImageUrl = coverUrl,
                 IsActive = true,
                 IsVerified = false,
                 CreatedAt = DateTime.UtcNow
@@ -127,6 +139,20 @@ namespace NearGo.Pages.Auth
 
             TempData["Success"] = "Đăng ký siêu thị thành công!";
             return RedirectToPage("/Auth/Login");
+        }
+
+        private async Task<string?> SaveImageAsync(IFormFile? file, string? existingUrl, string uploadsDir)
+        {
+            if (file != null && file.Length > 0)
+            {
+                var ext = Path.GetExtension(file.FileName);
+                var fileName = $"sm_{Guid.NewGuid()}{ext}";
+                var filePath = Path.Combine(uploadsDir, fileName);
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await file.CopyToAsync(stream);
+                return $"/uploads/supermarkets/{fileName}";
+            }
+            return existingUrl;
         }
 
         private string GenerateSlug(string name)

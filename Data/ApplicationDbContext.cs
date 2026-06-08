@@ -1,19 +1,12 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using NearGo.Configurations;
 using NearGo.Models;
-using Microsoft.Extensions.Options;
 
 namespace NearGo.Data
 {
     public class ApplicationDbContext : IdentityDbContext<AppUser>
     {
-        private readonly decimal _defaultCommissionPercent;
-
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IOptions<FinanceSettings>? financeSettings = null) : base(options)
-        {
-            _defaultCommissionPercent = financeSettings?.Value?.DefaultCommissionPercent ?? 10m;
-        }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         public DbSet<Product> Products => Set<Product>();
         public DbSet<Category> Categories => Set<Category>();
@@ -58,7 +51,8 @@ namespace NearGo.Data
                 var supermarket = await Supermarkets.FindAsync(new object[] { supermarketId }, cancellationToken);
                 if (supermarket != null)
                 {
-                    var commissionAmount = totalAmount * _defaultCommissionPercent / 100;
+                    var commissionPercent = supermarket.SubscriptionTier == "Premium" ? 5m : 10m;
+                    var commissionAmount = totalAmount * commissionPercent / 100;
                     var supermarketEarned = totalAmount - commissionAmount;
                     supermarket.Balance += supermarketEarned;
 
@@ -67,7 +61,7 @@ namespace NearGo.Data
                         SupermarketId = supermarketId,
                         FeeType = "Commission",
                         Amount = commissionAmount,
-                        Description = $"Phí hoa hồng {_defaultCommissionPercent}% đơn hàng #{orderCode}",
+                        Description = $"Phí hoa hồng {commissionPercent}% đơn hàng #{orderCode}",
                         Status = "Paid",
                         CreatedAt = DateTime.UtcNow,
                         PaidAt = DateTime.UtcNow

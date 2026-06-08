@@ -55,7 +55,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.Configure<SEPaySettings>(builder.Configuration.GetSection("SEPay"));
-builder.Services.Configure<FinanceSettings>(builder.Configuration.GetSection("Finance"));
+
 builder.Services.Configure<OpenAISettings>(builder.Configuration.GetSection("OpenAI"));
 builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("Gemini"));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
