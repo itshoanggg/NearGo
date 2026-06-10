@@ -33,7 +33,7 @@ namespace NearGo.Pages.Customer
             UserProfile = await _userManager.GetUserAsync(User);
 
             TotalOrders = await _context.Orders.CountAsync(o => o.CustomerId == userId);
-            CompletedOrders = await _context.Orders.CountAsync(o => o.CustomerId == userId && o.Status == "Delivered");
+            CompletedOrders = await _context.Orders.CountAsync(o => o.CustomerId == userId && o.Status == "Received");
             var user = await _context.Users.Include(u => u.FollowedSupermarkets).FirstOrDefaultAsync(u => u.Id == userId);
             FollowingCount = user?.FollowedSupermarkets.Count ?? 0;
             LoyaltyPoints = (await _context.LoyaltyPoints

@@ -4,8 +4,13 @@
     ViewData["Title"] = "Quản lý đơn hàng";
     Layout = "_SupermarketLayout";
 }
-<div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Đơn hàng (@Model.TotalCount)</h2>
+<div class="space-y-4">
+    <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Đơn hàng (@Model.TotalCount)</h2>
+        <a href="/supermarket/scanqr" class="px-4 py-2 bg-primary-500 text-white text-sm font-medium rounded-xl hover:bg-primary-600 transition-colors">
+            <i class="fas fa-qrcode mr-1"></i> Quét QR
+        </a>
+    </div>
 
     <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <div>
@@ -16,8 +21,7 @@
                 <option value="">Tất cả trạng thái</option>
                 <option value="Pending" selected="@(Model.Status == "Pending")">Chờ xác nhận</option>
                 <option value="Confirmed" selected="@(Model.Status == "Confirmed")">Đã xác nhận</option>
-                <option value="Shipping" selected="@(Model.Status == "Shipping")">Đang giao</option>
-                <option value="Delivered" selected="@(Model.Status == "Delivered")">Đã giao</option>
+                <option value="Received" selected="@(Model.Status == "Received")">Đã nhận hàng</option>
                 <option value="Cancelled" selected="@(Model.Status == "Cancelled")">Đã hủy</option>
             </select>
         </div>
@@ -38,92 +42,87 @@
         </div>
     </form>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead>
-                <tr class="text-left text-gray-500 border-b border-gray-100 dark:border-gray-700">
-                    <th class="pb-3 font-medium">Mã đơn</th>
-                    <th class="pb-3 font-medium">Khách hàng</th>
-                    <th class="pb-3 font-medium">SL</th>
-                    <th class="pb-3 font-medium">Tổng</th>
-                    <th class="pb-3 font-medium">Thanh toán</th>
-                    <th class="pb-3 font-medium">Trạng thái</th>
-                    <th class="pb-3 font-medium">Ngày</th>
-                    <th class="pb-3 font-medium text-right">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (!Model.Orders.Any())
-                {
-                    <tr><td colspan="8" class="py-8 text-center text-gray-400">Không có đơn hàng nào</td></tr>
-                }
-                @foreach (var o in Model.Orders)
-                {
-                    <tr class="border-b border-gray-50 dark:border-gray-800">
-                        <td class="py-3 text-gray-900 dark:text-white font-medium">#@o.OrderCode</td>
-                        <td class="py-3 text-gray-500">@o.Customer?.FullName</td>
-                        <td class="py-3 text-gray-500">@o.OrderItems.Sum(i => i.Quantity)</td>
-                        <td class="py-3 text-gray-900 dark:text-white font-medium">@o.TotalAmount.ToString("N0")đ</td>
-                        <td class="py-3">
-                            <span class="px-2 py-0.5 rounded-full text-xs @(o.PaymentStatus == "Paid" ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600")">
-                                @(o.PaymentStatus == "Paid" ? "Đã TT" : "Chưa TT")
-                            </span>
-                        </td>
-                        <td class="py-3">
-                            <span class="px-2 py-0.5 rounded-full text-xs
-                                @(o.Status == "Delivered" ? "bg-green-100 text-green-600" :
-                                  o.Status == "Cancelled" ? "bg-red-100 text-red-600" :
-                                  o.Status == "Shipping" ? "bg-blue-100 text-blue-600" :
-                                  o.Status == "Confirmed" ? "bg-purple-100 text-purple-600" :
-                                  "bg-yellow-100 text-yellow-600")">
-                                @(o.Status == "Pending" ? "Chờ XN" :
-                                  o.Status == "Confirmed" ? "Đã XN" :
-                                  o.Status == "Shipping" ? "Đang giao" :
-                                  o.Status == "Delivered" ? "Đã giao" : "Đã hủy")
-                            </span>
-                        </td>
-                        <td class="py-3 text-gray-500 text-xs">@o.OrderDate.ToVietnamTime().ToString("dd/MM HH:mm")</td>
-                        <td class="py-3 text-right">
-                            <div class="flex items-center justify-end gap-1">
-                                @if (o.Status == "Pending")
-                                {
-                                    <a href="/supermarket/orders?handler=updateStatus&id=@o.Id&status=Confirmed"
-                                       class="px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">Xác nhận</a>
-                                }
-                                @if (o.Status == "Confirmed")
-                                {
-                                    <a href="/supermarket/orders?handler=updateStatus&id=@o.Id&status=Shipping"
-                                       class="px-2 py-1 text-xs bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition-colors">Giao hàng</a>
-                                }
-                                @if (o.Status == "Shipping")
-                                {
-                                    <a href="/supermarket/orders?handler=updateStatus&id=@o.Id&status=Delivered"
-                                       class="px-2 py-1 text-xs bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors">Hoàn thành</a>
-                                }
-                                @if (o.Status != "Delivered" && o.Status != "Cancelled")
-                                {
-                                    <a href="/supermarket/orders?handler=updateStatus&id=@o.Id&status=Cancelled"
-                                       class="px-2 py-1 text-xs bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
-                                       onclick="return confirm('Hủy đơn hàng này?')">Hủy</a>
-                                }
-                            </div>
-                        </td>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-left text-gray-500 border-b border-gray-100 dark:border-gray-700">
+                        <th class="pb-3 font-medium">Mã đơn</th>
+                        <th class="pb-3 font-medium">Khách hàng</th>
+                        <th class="pb-3 font-medium">SL</th>
+                        <th class="pb-3 font-medium">Tổng</th>
+                        <th class="pb-3 font-medium">Thanh toán</th>
+                        <th class="pb-3 font-medium">Trạng thái</th>
+                        <th class="pb-3 font-medium">Ngày</th>
+                        <th class="pb-3 font-medium text-right">Thao tác</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-
-    @if (Model.TotalPages > 1)
-    {
-        <div class="flex items-center justify-center gap-2 mt-6">
-            @for (int i = 1; i <= Model.TotalPages; i++)
-            {
-                <a href="@Url.Page("Orders", new { p = i, search = Model.Search, status = Model.Status, payment = Model.Payment })"
-                    class="px-3 py-1.5 text-sm rounded-lg @(i == Model.CurrentPage ? "bg-primary-500 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600")">
-                    @i
-                </a>
-            }
+                </thead>
+                <tbody>
+                    @if (!Model.Orders.Any())
+                    {
+                        <tr><td colspan="8" class="py-8 text-center text-gray-400">Không có đơn hàng nào</td></tr>
+                    }
+                    @foreach (var o in Model.Orders)
+                    {
+                        <tr class="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer" onclick="location.href='/supermarket/orders/detail?id=@o.Id'">
+                            <td class="py-3"><a href="/supermarket/orders/detail?id=@o.Id" class="text-primary-600 hover:text-primary-700 font-medium">#@o.OrderCode</a></td>
+                            <td class="py-3 text-gray-500">@o.Customer?.FullName</td>
+                            <td class="py-3 text-gray-500">@o.OrderItems.Sum(i => i.Quantity)</td>
+                            <td class="py-3 text-gray-900 dark:text-white font-medium">@o.TotalAmount.ToString("N0")đ</td>
+                            <td class="py-3">
+                                <span class="px-2 py-0.5 rounded-full text-xs @(o.PaymentStatus == "Paid" ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600")">
+                                    @(o.PaymentStatus == "Paid" ? "Đã TT" : "Chưa TT")
+                                </span>
+                            </td>
+                            <td class="py-3">
+                                <span class="px-2 py-0.5 rounded-full text-xs
+                                    @(o.Status == "Received" ? "bg-green-100 text-green-600" :
+                                      o.Status == "Cancelled" ? "bg-red-100 text-red-600" :
+                                      o.Status == "Confirmed" ? "bg-purple-100 text-purple-600" :
+                                      "bg-yellow-100 text-yellow-600")">
+                                    @(o.Status == "Pending" ? "Chờ XN" :
+                                      o.Status == "Confirmed" ? "Đã XN" :
+                                      o.Status == "Received" ? "Đã nhận" : "Đã hủy")
+                                </span>
+                            </td>
+                            <td class="py-3 text-gray-500 text-xs">@o.OrderDate.ToVietnamTime().ToString("dd/MM HH:mm")</td>
+                            <td class="py-3 text-right">
+                                <div class="flex items-center justify-end gap-1">
+                                    @if (o.Status == "Pending")
+                                    {
+                                        <a href="/supermarket/orders?handler=updateStatus&id=@o.Id&status=Confirmed"
+                                           class="px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">Xác nhận</a>
+                                    }
+                                    @if (o.Status == "Confirmed")
+                                    {
+                                        <a href="/supermarket/orders?handler=updateStatus&id=@o.Id&status=Received"
+                                           class="px-2 py-1 text-xs bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors">Nhận hàng</a>
+                                    }
+                                    @if (o.Status == "Pending" || o.Status == "Confirmed")
+                                    {
+                                        <a href="/supermarket/orders?handler=updateStatus&id=@o.Id&status=Cancelled"
+                                           class="px-2 py-1 text-xs bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                                           onclick="return confirm('Hủy đơn hàng này?')">Hủy</a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
-    }
+
+        @if (Model.TotalPages > 1)
+        {
+            <div class="flex items-center justify-center gap-2 mt-6">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <a href="@Url.Page("Orders", new { p = i, search = Model.Search, status = Model.Status, payment = Model.Payment })"
+                        class="px-3 py-1.5 text-sm rounded-lg @(i == Model.CurrentPage ? "bg-primary-500 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600")">
+                        @i
+                    </a>
+                }
+            </div>
+        }
+    </div>
 </div>

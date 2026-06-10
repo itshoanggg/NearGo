@@ -31,7 +31,7 @@ namespace NearGo.Pages.Customer
                 .FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == userId);
 
             if (order == null) return NotFound();
-            if (order.Status != "Delivered") return BadRequest("Đơn hàng chưa được giao");
+            if (order.Status != "Received") return BadRequest("Đơn hàng chưa được nhận");
 
             var alreadyRated = await _context.SupermarketRatings.AnyAsync(r => r.OrderId == id);
             if (alreadyRated) return BadRequest("Bạn đã đánh giá đơn hàng này rồi");
@@ -49,7 +49,7 @@ namespace NearGo.Pages.Customer
                 .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == userId);
 
             if (order == null) return NotFound();
-            if (order.Status != "Delivered") return BadRequest("Đơn hàng chưa được giao");
+            if (order.Status != "Received") return BadRequest("Đơn hàng chưa được nhận");
             if (rating < 1 || rating > 5) return BadRequest("Sao không hợp lệ");
 
             var alreadyRated = await _context.SupermarketRatings.AnyAsync(r => r.OrderId == orderId);

@@ -76,8 +76,8 @@
                 <div class="space-y-3">
                     <div class="flex items-center justify-between text-sm">
                         <span class="text-gray-400">Đơn hàng</span>
-                        <span class="px-2 py-0.5 rounded-full text-xs font-medium @(Model.Order.Status == "Delivered" ? "bg-green-100 text-green-600" : Model.Order.Status == "Cancelled" ? "bg-red-100 text-red-600" : "bg-yellow-100 text-yellow-600")">
-                            @(Model.Order.Status == "Pending" ? "Chờ xác nhận" : Model.Order.Status == "Confirmed" ? "Chờ giao hàng" : Model.Order.Status == "Shipping" ? "Đang giao" : Model.Order.Status == "Delivered" ? "Đã giao" : "Đã hủy")
+                        <span class="px-2 py-0.5 rounded-full text-xs font-medium @(Model.Order.Status == "Received" ? "bg-green-100 text-green-600" : Model.Order.Status == "Cancelled" ? "bg-red-100 text-red-600" : "bg-yellow-100 text-yellow-600")">
+                            @(Model.Order.Status == "Pending" ? "Chờ xác nhận" : Model.Order.Status == "Confirmed" ? "Đã xác nhận" : Model.Order.Status == "Received" ? "Đã nhận hàng" : "Đã hủy")
                         </span>
                     </div>
                     <div class="flex items-center justify-between text-sm">
@@ -107,6 +107,21 @@
                 </div>
             </div>
 
+            @if (Model.Order.Status == "Pending" || Model.Order.Status == "Confirmed")
+            {
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 text-center">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2 justify-center">
+                        <i class="fas fa-qrcode text-primary-500"></i> Mã QR nhận hàng
+                    </h3>
+                    <p class="text-xs text-gray-500 mb-3">Đưa mã này cho siêu thị để quét khi nhận hàng</p>
+                    <div id="qrcode" class="inline-flex" data-code="@Model.Order?.OrderCode"></div>
+                    <div class="mt-3">
+                        <button onclick="printQR()" class="px-3 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            <i class="fas fa-print mr-1"></i> In mã QR
+                        </button>
+                    </div>
+                </div>
+            }
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                     <i class="fas fa-store text-primary-500"></i> Cửa hàng
@@ -118,7 +133,7 @@
                         <p class="text-xs text-gray-400">@Model.Order.Supermarket.Address</p>
                     </div>
                 </div>
-                @if (Model.Order.Status == "Delivered" && Model.Order.SupermarketRating == null)
+                @if (Model.Order.Status == "Received" && Model.Order.SupermarketRating == null)
                 {
                     <a href="/customer/ratesupermarket?id=@Model.Order.Id" class="mt-3 inline-flex items-center gap-1 px-3 py-1.5 bg-yellow-400 text-yellow-900 text-sm font-medium rounded-xl hover:bg-yellow-500 transition-colors">
                         <i class="fas fa-star"></i> Đánh giá siêu thị
@@ -178,3 +193,35 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var el = document.getElementById('qrcode');
+            if (el) {
+                new QRCode(el, {
+                    text: el.getAttribute('data-code'),
+                    width: 180,
+                    height: 180,
+                    colorDark: '#1f2937',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+        });
+
+        function printQR() {
+            var qrEl = document.getElementById('qrcode');
+            if (!qrEl) return;
+            var img = qrEl.querySelector('img');
+            if (!img) return;
+            var win = window.open('');
+            win.document.write('<html><head><title>In mã QR</title><style>body{display:flex;justify-content:center;align-items:center;height:100vh;margin:0}</style></head><body>');
+            win.document.write('<img src="' + img.src + '" style="width:300px;height:300px" />');
+            win.document.write('</body></html>');
+            win.document.close();
+            win.print();
+        }
+    </script>
+}

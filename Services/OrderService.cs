@@ -189,7 +189,7 @@ namespace NearGo.Services
             if (order == null) return false;
 
             order.Status = status;
-            if (status == "Delivered") order.DeliveredDate = DateTime.UtcNow;
+            if (status == "Received") order.DeliveredDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return true;
         }

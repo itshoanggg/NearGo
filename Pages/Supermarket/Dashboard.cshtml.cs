@@ -31,6 +31,8 @@ namespace NearGo.Pages.Supermarket
         public decimal CommissionPercent { get; set; }
         public List<Order> RecentOrders { get; set; } = new();
         public List<Product> TopProducts { get; set; } = new();
+        public List<decimal> DailyRevenue { get; set; } = new();
+        public List<string> DailyRevenueLabels { get; set; } = new();
 
         public async Task OnGetAsync()
         {
@@ -71,6 +73,27 @@ namespace NearGo.Pages.Supermarket
                 .OrderByDescending(p => p.SoldCount)
                 .Take(10)
                 .ToListAsync();
+
+            var today = DateTime.UtcNow.Date;
+            var vietnamTz = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            DailyRevenue = new List<decimal>();
+            DailyRevenueLabels = new List<string>();
+            var dayNames = new[] { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
+            for (int i = 6; i >= 0; i--)
+            {
+                var dayStart = today.AddDays(-i);
+                var dayEnd = dayStart.AddDays(1);
+                var dayGross = await _context.Orders
+                    .Where(o => o.SupermarketId == Supermarket.Id
+                        && o.PaymentStatus == "Paid"
+                        && o.Status != "Cancelled"
+                        && o.PaymentDate >= dayStart
+                        && o.PaymentDate < dayEnd)
+                    .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+                DailyRevenue.Add(dayGross);
+                var localDay = TimeZoneInfo.ConvertTimeFromUtc(dayStart, vietnamTz);
+                DailyRevenueLabels.Add(dayNames[(int)localDay.DayOfWeek]);
+            }
         }
     }
 }

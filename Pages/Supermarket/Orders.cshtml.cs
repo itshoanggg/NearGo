@@ -77,12 +77,30 @@ namespace NearGo.Pages.Supermarket
                 .FirstOrDefaultAsync(o => o.Id == id && o.SupermarketId == user.SupermarketId.Value);
             if (order == null) return NotFound();
 
-            if (status == "Delivered" && order.Status == "Shipping")
+            if (status == "Confirmed" && order.Status == "Pending")
             {
-                order.Status = "Delivered";
+                order.Status = "Confirmed";
+            }
+            else if (status == "Received" && order.Status == "Confirmed")
+            {
+                if (order.PaymentStatus == "Unpaid")
+                {
+                    order.PaymentStatus = "Paid";
+                    order.PaymentDate = DateTime.UtcNow;
+                    var sm = await _context.Supermarkets.FindAsync(order.SupermarketId);
+                    if (sm != null)
+                    {
+                        sm.TotalOrders = await _context.Orders
+                            .CountAsync(o => o.SupermarketId == order.SupermarketId && o.Status != "Cancelled");
+                        sm.TotalRevenue = await _context.Orders
+                            .Where(o => o.SupermarketId == order.SupermarketId && o.PaymentStatus == "Paid" && o.Status != "Cancelled")
+                            .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+                    }
+                }
+                order.Status = "Received";
                 order.DeliveredDate = DateTime.UtcNow;
             }
-            else if (status == "Cancelled" && order.Status != "Delivered")
+            else if (status == "Cancelled" && order.Status != "Received")
             {
                 order.Status = "Cancelled";
                 var sm = await _context.Supermarkets.FindAsync(order.SupermarketId);
@@ -94,14 +112,6 @@ namespace NearGo.Pages.Supermarket
                         .Where(o => o.SupermarketId == order.SupermarketId && o.PaymentStatus == "Paid" && o.Status != "Cancelled")
                         .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
                 }
-            }
-            else if (status == "Confirmed" && order.Status == "Pending")
-            {
-                order.Status = "Confirmed";
-            }
-            else if (status == "Shipping" && order.Status == "Confirmed")
-            {
-                order.Status = "Shipping";
             }
             else
             {
@@ -121,6 +131,57 @@ namespace NearGo.Pages.Supermarket
 
             TempData["Success"] = $"Đã cập nhật đơn hàng #{order.OrderCode}";
             return RedirectToPage("Orders");
+        }
+
+        public async Task<IActionResult> OnGetReceiveByQrAsync(string code)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user?.SupermarketId == null) return Forbid();
+
+            var order = await _context.Orders
+                .Include(o => o.Customer)
+                .FirstOrDefaultAsync(o => o.OrderCode == code && o.SupermarketId == user.SupermarketId.Value);
+            if (order == null)
+            {
+                TempData["Error"] = "Không tìm thấy đơn hàng với mã này";
+                return RedirectToPage("ScanQR");
+            }
+
+            if (order.Status != "Confirmed")
+            {
+                TempData["Error"] = "Đơn hàng chưa được xác nhận hoặc đã nhận hàng";
+                return RedirectToPage("ScanQR");
+            }
+
+            if (order.PaymentStatus == "Unpaid")
+            {
+                order.PaymentStatus = "Paid";
+                order.PaymentDate = DateTime.UtcNow;
+                var sm = await _context.Supermarkets.FindAsync(order.SupermarketId);
+                if (sm != null)
+                {
+                    sm.TotalOrders = await _context.Orders
+                        .CountAsync(o => o.SupermarketId == order.SupermarketId && o.Status != "Cancelled");
+                    sm.TotalRevenue = await _context.Orders
+                        .Where(o => o.SupermarketId == order.SupermarketId && o.PaymentStatus == "Paid" && o.Status != "Cancelled")
+                        .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+                }
+            }
+
+            order.Status = "Received";
+            order.DeliveredDate = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _hubContext.Clients.Group($"user_{order.CustomerId}")
+                    .SendAsync("ReceiveNotification", "Nhận hàng thành công",
+                        $"Đơn hàng #{order.OrderCode} đã được nhận tại siêu thị", "");
+            }
+            catch { }
+
+            TempData["Success"] = $"Đã xác nhận nhận hàng cho đơn #{order.OrderCode}";
+            return RedirectToPage("ScanQR");
         }
     }
 }

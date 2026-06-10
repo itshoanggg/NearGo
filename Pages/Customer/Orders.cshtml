@@ -25,8 +25,8 @@
                             <span class="text-xs text-gray-500 ml-2">@order.OrderDate.ToVietnamTime().ToString("dd/MM/yyyy HH:mm")</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="text-xs px-2 py-0.5 rounded-full font-medium @(order.Status == "Delivered" ? "bg-green-100 text-green-600" : order.Status == "Cancelled" ? "bg-red-100 text-red-600" : "bg-yellow-100 text-yellow-600")">
-                                @(order.Status == "Pending" ? "Chờ xác nhận" : order.Status == "Confirmed" ? "Chờ giao hàng" : order.Status == "Shipping" ? "Đang giao" : order.Status == "Delivered" ? "Đã giao" : "Đã hủy")
+                            <span class="text-xs px-2 py-0.5 rounded-full font-medium @(order.Status == "Received" ? "bg-green-100 text-green-600" : order.Status == "Cancelled" ? "bg-red-100 text-red-600" : "bg-yellow-100 text-yellow-600")">
+                                @(order.Status == "Pending" ? "Chờ xác nhận" : order.Status == "Confirmed" ? "Đã xác nhận" : order.Status == "Received" ? "Đã nhận hàng" : "Đã hủy")
                             </span>
                             <a href="/customer/orders/detail?id=@order.Id" class="text-primary-500 text-sm hover:text-primary-600">
                                 <i class="fas fa-eye"></i>
