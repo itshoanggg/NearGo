@@ -134,6 +134,18 @@ namespace NearGo.Services
             _context.Notifications.Add(notification);
 
             await _context.SaveChangesAsync();
+
+            var supermarket = await _context.Supermarkets.FindAsync(supermarketId);
+            if (supermarket != null)
+            {
+                supermarket.TotalOrders = await _context.Orders
+                    .CountAsync(o => o.SupermarketId == supermarketId && o.Status != "Cancelled");
+                supermarket.TotalRevenue = await _context.Orders
+                    .Where(o => o.SupermarketId == supermarketId && o.PaymentStatus == "Paid" && o.Status != "Cancelled")
+                    .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+                await _context.SaveChangesAsync();
+            }
+
             return order;
         }
 

@@ -85,6 +85,15 @@ namespace NearGo.Pages.Supermarket
             else if (status == "Cancelled" && order.Status != "Delivered")
             {
                 order.Status = "Cancelled";
+                var sm = await _context.Supermarkets.FindAsync(order.SupermarketId);
+                if (sm != null)
+                {
+                    sm.TotalOrders = await _context.Orders
+                        .CountAsync(o => o.SupermarketId == order.SupermarketId && o.Status != "Cancelled");
+                    sm.TotalRevenue = await _context.Orders
+                        .Where(o => o.SupermarketId == order.SupermarketId && o.PaymentStatus == "Paid" && o.Status != "Cancelled")
+                        .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+                }
             }
             else if (status == "Confirmed" && order.Status == "Pending")
             {
