@@ -5,11 +5,11 @@
     Layout = "_SupermarketLayout";
 }
 <div class="space-y-6">
-    <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-white">
+    <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-gray-900 dark:text-white">
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="text-xl font-bold">@Model.Supermarket?.Name</h2>
-                <p class="text-white/70 text-sm mt-1">Dashboard quản lý siêu thị</p>
+                <p class="text-gray-600 dark:text-white/70 text-sm mt-1">Dashboard quản lý siêu thị</p>
             </div>
             <div class="flex items-center gap-2">
                 <span class="px-3 py-1 bg-white/20 rounded-lg text-xs font-medium">@Model.Supermarket?.SubscriptionTier</span>
@@ -22,14 +22,14 @@
     </div>
     @if (Model.Supermarket?.SubscriptionTier == "Free")
     {
-        <div class="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 text-white flex items-center justify-between">
+        <div class="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 text-gray-900 dark:text-white flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
                     <i class="fas fa-percentage"></i>
                 </div>
                 <div>
                     <p class="text-sm font-semibold">Bạn đang dùng gói Free</p>
-                    <p class="text-xs text-white/70">Phí hoa hồng @Model.CommissionPercent% trên mỗi đơn hàng</p>
+                    <p class="text-xs text-gray-600 dark:text-white/70">Phí hoa hồng @Model.CommissionPercent% trên mỗi đơn hàng</p>
                 </div>
             </div>
             <a href="/supermarket/upgrade" class="px-4 py-2 bg-white text-amber-600 font-semibold rounded-xl text-sm hover:bg-amber-50 transition-colors">

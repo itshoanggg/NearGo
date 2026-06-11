@@ -6,7 +6,7 @@
 <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-5 gap-6">
     <aside class="md:col-span-1">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden sticky top-20">
-            <div class="p-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-center">
+            <div class="p-4 bg-gradient-to-r from-primary-500 to-primary-600 text-gray-900 dark:text-white text-center">
                 @{
                     var user = await UserManager.GetUserAsync(User);
                     var supermarket = user != null ? await SupermarketDbContext.Supermarkets.FindAsync(user.SupermarketId) : null;
@@ -22,7 +22,7 @@
                     }
                 </div>
                 <p class="font-semibold text-sm">@(supermarket?.Name ?? "Quản lý siêu thị")</p>
-                <p class="text-white/60 text-xs">@user?.Email</p>
+                <p class="text-gray-600 dark:text-white/60 text-xs">@user?.Email</p>
             </div>
             <nav class="p-2 space-y-1">
                 <a href="/supermarket/dashboard" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm @(Context.Request.Path == "/supermarket/dashboard" ? "bg-primary-50 dark:bg-primary-900/20 text-primary-600 font-medium" : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700")">

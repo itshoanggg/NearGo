@@ -5,9 +5,9 @@
     Layout = "_SupermarketLayout";
 }
 <div class="max-w-2xl mx-auto space-y-6">
-    <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-white">
+    <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-gray-900 dark:text-white">
         <h2 class="text-xl font-bold">Thông tin tài khoản ngân hàng</h2>
-        <p class="text-white/70 text-sm mt-1">@(Model.HasBankInfo ? "Cập nhật tài khoản nhận tiền" : "Thêm tài khoản nhận tiền")</p>
+        <p class="text-gray-600 dark:text-white/70 text-sm mt-1">@(Model.HasBankInfo ? "Cập nhật tài khoản nhận tiền" : "Thêm tài khoản nhận tiền")</p>
     </div>
 
     @if (Model.HasBankInfo)
