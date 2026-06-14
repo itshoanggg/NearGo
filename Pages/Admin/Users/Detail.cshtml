@@ -80,18 +80,6 @@
                         <label class="text-xs text-gray-500 uppercase tracking-wider">Địa chỉ</label>
                         <p class="text-gray-900 dark:text-white font-medium">@(Model.UserDetail.Address ?? "—")</p>
                     </div>
-                    <div>
-                        <label class="text-xs text-gray-500 uppercase tracking-wider">Ngày đăng ký</label>
-                        <p class="text-gray-900 dark:text-white font-medium">@Model.UserDetail.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-500 uppercase tracking-wider">Email xác nhận</label>
-                        <p class="text-gray-900 dark:text-white font-medium">@(Model.UserDetail.EmailConfirmed ? "Đã xác nhận" : "Chưa xác nhận")</p>
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-500 uppercase tracking-wider">Số điện thoại xác nhận</label>
-                        <p class="text-gray-900 dark:text-white font-medium">@(Model.UserDetail.PhoneNumberConfirmed ? "Đã xác nhận" : "Chưa xác nhận")</p>
-                    </div>
                 </div>
             </div>
 

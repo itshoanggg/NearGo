@@ -21,28 +21,27 @@ namespace NearGo.Pages.Admin.Users
         }
 
         public List<AppUser> Users { get; set; } = new();
-        public Dictionary<string, string> UserRoles { get; set; } = new();
         public string? Filter { get; set; }
         public string? Search { get; set; }
-        public string? RoleFilter { get; set; }
         public int CurrentPage { get; set; } = 1;
         public int TotalPages { get; set; }
         public int TotalCount { get; set; }
         public const int PageSize = 10;
 
-        public async Task OnGetAsync(string? filter, string? search, string? role, int? p)
+        public async Task OnGetAsync(string? filter, string? search, int? p)
         {
             Filter = filter;
             Search = search;
-            RoleFilter = role;
             CurrentPage = p ?? 1;
 
-            var query = _context.Users.AsQueryable();
+            var customers = await _userManager.GetUsersInRoleAsync("Customer");
+            var customerIds = customers.Select(u => u.Id).ToList();
+            var query = _context.Users.Where(u => customerIds.Contains(u.Id));
 
             if (!string.IsNullOrEmpty(search))
             {
                 var s = search.ToLower();
-                    query = query.Where(x => (x.FullName ?? "").ToLower().Contains(s)
+                query = query.Where(x => (x.FullName ?? "").ToLower().Contains(s)
                     || x.Email.ToLower().Contains(s)
                     || (x.PhoneNumber ?? "").Contains(s));
             }
@@ -53,14 +52,6 @@ namespace NearGo.Pages.Admin.Users
                 "inactive" => query.Where(x => !x.IsActive),
                 _ => query
             };
-
-            var roleUserIds = new List<string>();
-            if (!string.IsNullOrEmpty(role))
-            {
-                var usersInRole = await _userManager.GetUsersInRoleAsync(role);
-                roleUserIds = usersInRole.Select(u => u.Id).ToList();
-                query = query.Where(u => roleUserIds.Contains(u.Id));
-            }
 
             TotalCount = await query.CountAsync();
             TotalPages = (int)Math.Ceiling(TotalCount / (double)PageSize);
@@ -73,12 +64,6 @@ namespace NearGo.Pages.Admin.Users
                 .Skip((CurrentPage - 1) * PageSize)
                 .Take(PageSize)
                 .ToListAsync();
-
-            foreach (var user in Users)
-            {
-                var roles = await _userManager.GetRolesAsync(user);
-                UserRoles[user.Id] = roles.FirstOrDefault() ?? "Customer";
-            }
         }
     }
 }

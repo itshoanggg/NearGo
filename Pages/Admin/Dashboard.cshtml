@@ -83,7 +83,6 @@
                             <th class="pb-3 font-medium">Người dùng</th>
                             <th class="pb-3 font-medium">Email</th>
                             <th class="pb-3 font-medium">Số điện thoại</th>
-                            <th class="pb-3 font-medium">Ngày đăng ký</th>
                             <th class="pb-3 font-medium">Trạng thái</th>
                         </tr>
                     </thead>
@@ -101,7 +100,6 @@
                                 </td>
                                 <td class="py-3 text-gray-500">@user.Email</td>
                                 <td class="py-3 text-gray-500">@(user.PhoneNumber ?? "—")</td>
-                                <td class="py-3 text-gray-500">@user.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
                                 <td class="py-3">
                                     <span class="px-2 py-0.5 rounded-full text-xs @(user.IsActive ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")">
                                         @(user.IsActive ? "Hoạt động" : "Đã khóa")
@@ -111,7 +109,7 @@
                         }
                         @if (!Model.RecentUsers.Any())
                         {
-                            <tr><td colspan="5" class="py-8 text-center text-gray-400">Chưa có người dùng nào</td></tr>
+                            <tr><td colspan="4" class="py-8 text-center text-gray-400">Chưa có người dùng nào</td></tr>
                         }
                     </tbody>
                 </table>
