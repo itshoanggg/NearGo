@@ -30,9 +30,9 @@
                     </a>
                 </div>
                 <div class="flex gap-8 mt-8 text-white/70">
-                    <div><span class="text-2xl font-bold text-white">100+</span><p class="text-xs">Siêu thị</p></div>
-                    <div><span class="text-2xl font-bold text-white">5000+</span><p class="text-xs">Sản phẩm</p></div>
-                    <div><span class="text-2xl font-bold text-white">50%</span><p class="text-xs">Tiết kiệm</p></div>
+                    <div><span class="text-2xl font-bold text-white">@Model.TotalSupermarkets+</span><p class="text-xs">Siêu thị</p></div>
+                    <div><span class="text-2xl font-bold text-white">@Model.TotalProducts+</span><p class="text-xs">Sản phẩm</p></div>
+                    <div><span class="text-2xl font-bold text-white">@((int)Model.MaxDiscountPercentage)%</span><p class="text-xs">Tiết kiệm</p></div>
                 </div>
             </div>
             <div class="hidden md:block" data-aos="fade-left">

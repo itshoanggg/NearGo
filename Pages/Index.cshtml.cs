@@ -18,6 +18,9 @@ namespace NearGo.Pages
         public List<Category> Categories { get; set; } = new();
         public List<Product> FeaturedProducts { get; set; } = new();
         public List<NearGo.Models.Supermarket> Supermarkets { get; set; } = new();
+        public int TotalSupermarkets { get; set; }
+        public int TotalProducts { get; set; }
+        public double MaxDiscountPercentage { get; set; }
 
         public async Task OnGetAsync()
         {
@@ -43,6 +46,12 @@ namespace NearGo.Pages
                 .OrderByDescending(s => s.Rating)
                 .Take(12)
                 .ToListAsync();
+
+            TotalSupermarkets = await _context.Supermarkets.CountAsync(s => s.IsActive);
+            TotalProducts = await _context.Products.CountAsync(p => p.IsActive && p.StockQuantity > 0 && p.ExpiryDate > now);
+            MaxDiscountPercentage = await _context.Products
+                .Where(p => p.IsActive && p.StockQuantity > 0 && p.ExpiryDate > now)
+                .MaxAsync(p => (double?)p.DiscountPercentage) ?? 0;
         }
     }
 }
