@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using NearGo.Data;
+using NearGo.Models;
 using NearGo.Services;
 
 namespace NearGo.Pages.Admin
@@ -12,11 +14,13 @@ namespace NearGo.Pages.Admin
     {
         private readonly ApplicationDbContext _context;
         private readonly FinanceService _financeService;
+        private readonly UserManager<AppUser> _userManager;
 
-        public DashboardModel(ApplicationDbContext context, FinanceService financeService)
+        public DashboardModel(ApplicationDbContext context, FinanceService financeService, UserManager<AppUser> userManager)
         {
             _context = context;
             _financeService = financeService;
+            _userManager = userManager;
         }
 
         public int TotalUsers { get; set; }
@@ -32,7 +36,8 @@ namespace NearGo.Pages.Admin
 
         public async Task OnGetAsync()
         {
-            TotalUsers = await _context.Users.CountAsync();
+            var customers = await _userManager.GetUsersInRoleAsync("Customer");
+            TotalUsers = customers.Count;
             TotalSupermarkets = await _context.Supermarkets.CountAsync();
             TotalOrders = await _context.Orders.CountAsync();
             TotalRevenue = await _financeService.GetTotalPlatformRevenue();
