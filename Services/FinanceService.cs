@@ -29,7 +29,14 @@ namespace NearGo.Services
                 .Include(o => o.Supermarket)
                 .FirstOrDefaultAsync(o => o.Id == orderId);
 
-            if (order == null || order.PaymentMethod != "SEPay" || order.PaymentStatus != "Paid")
+            if (order == null || order.PaymentStatus != "Paid")
+                return;
+
+            var alreadyExists = await _context.PlatformFees
+                .AnyAsync(f => f.FeeType == "Commission"
+                    && f.Description != null
+                    && f.Description.Contains($"#{order.OrderCode}"));
+            if (alreadyExists)
                 return;
 
             var commissionPercent = order.Supermarket.SubscriptionTier == "Premium" ? 5m : 10m;

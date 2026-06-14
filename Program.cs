@@ -314,6 +314,9 @@ async Task<IResult> HandleSepayWebhook(HttpContext context, SEPayService sePaySe
 
         await db.SaveChangesAsync();
 
+        var financeService = scope.ServiceProvider.GetRequiredService<FinanceService>();
+        await financeService.AddOrderEarnings(order.Id);
+
         var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<NotificationHub>>();
         await hubContext.Clients.Group($"user_{pending.UserId}")
             .SendAsync("ReceiveNotification", "Thanh toán thành công",
