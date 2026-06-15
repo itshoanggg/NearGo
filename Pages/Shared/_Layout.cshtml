@@ -48,7 +48,7 @@
 
     @{
         var gaMeasurementId = Context.RequestServices.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>().GetSection("GoogleAnalytics")["MeasurementId"] ?? "";
-        gaMeasurementId = System.Text.RegularExpressions.Regex.Replace(gaMeasurementId, @"[^G\d-]", "");
+        gaMeasurementId = System.Text.RegularExpressions.Regex.Replace(gaMeasurementId, @"[^G\dA-Z-]", "");
     }
     @if (!string.IsNullOrEmpty(gaMeasurementId) && gaMeasurementId.StartsWith("G-"))
     {
