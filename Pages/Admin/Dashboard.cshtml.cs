@@ -52,10 +52,10 @@ namespace NearGo.Pages.Admin
 
             RevenueBySupermarket = await _financeService.GetRevenueBySupermarket();
 
-            RecentUsers = await _context.Users
+            RecentUsers = customers
                 .OrderByDescending(u => u.CreatedAt)
                 .Take(5)
-                .ToListAsync();
+                .ToList();
         }
     }
 }
