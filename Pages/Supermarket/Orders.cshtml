@@ -29,7 +29,6 @@
             <select name="payment" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary-500 outline-none">
                 <option value="">Tất cả TT</option>
                 <option value="Paid" selected="@(Model.Payment == "Paid")">Đã thanh toán</option>
-                <option value="Unpaid" selected="@(Model.Payment == "Unpaid")">Chưa thanh toán</option>
             </select>
         </div>
         <div class="flex gap-2">
@@ -69,9 +68,7 @@
                             <td class="py-3 text-gray-500">@o.OrderItems.Sum(i => i.Quantity)</td>
                             <td class="py-3 text-gray-900 dark:text-white font-medium">@o.TotalAmount.ToString("N0")đ</td>
                             <td class="py-3">
-                                <span class="px-2 py-0.5 rounded-full text-xs @(o.PaymentStatus == "Paid" ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600")">
-                                    @(o.PaymentStatus == "Paid" ? "Đã TT" : "Chưa TT")
-                                </span>
+                                <span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-600">Đã TT</span>
                             </td>
                             <td class="py-3">
                                 <span class="px-2 py-0.5 rounded-full text-xs

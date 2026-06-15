@@ -217,6 +217,8 @@ async Task<IResult> HandleSepayWebhook(HttpContext context, SEPayService sePaySe
         var totalAmount = subTotal - discountAmount - loyaltyDiscount;
         if (totalAmount < 0) totalAmount = 0;
 
+        var amountMismatch = transferAmount > 0 && Math.Abs(transferAmount - totalAmount) >= 1000;
+
         var order = new Order
         {
             OrderCode = orderCode,
@@ -283,26 +285,35 @@ async Task<IResult> HandleSepayWebhook(HttpContext context, SEPayService sePaySe
             });
         }
 
+        var paymentAmount = transferAmount > 0 ? transferAmount : totalAmount;
+        var paymentMessage = amountMismatch
+            ? $"Đã thanh toán {paymentAmount:N0}đ (thiếu {totalAmount - paymentAmount:N0}đ so với đơn hàng {totalAmount:N0}đ)"
+            : "Thanh toán thành công qua SEPay";
+
         var paymentTransaction = new PaymentTransaction
         {
             OrderId = order.Id,
             PaymentMethod = "SEPay",
             TransactionId = transactionId,
             BankCode = gateway,
-            Amount = transferAmount > 0 ? transferAmount : totalAmount,
+            Amount = paymentAmount,
             Status = "Success",
             ResponseCode = "00",
-            ResponseMessage = "Thanh toán thành công qua SEPay",
+            ResponseMessage = paymentMessage,
             CreatedAt = DateTime.UtcNow,
             PaidAt = DateTime.UtcNow
         };
         db.PaymentTransactions.Add(paymentTransaction);
 
+        var customerNotifMessage = amountMismatch
+            ? $"Đơn hàng #{orderCode} đã nhận được thanh toán {paymentAmount:N0}đ (chênh lệch {totalAmount - paymentAmount:N0}đ so với đơn hàng). Vui lòng liên hệ siêu thị để được hỗ trợ."
+            : $"Đơn hàng #{orderCode} đã được thanh toán qua SEPay";
+
         var customerNotif = new Notification
         {
             UserId = pending.UserId,
-            Title = "Thanh toán thành công",
-            Message = $"Đơn hàng #{orderCode} đã được thanh toán qua SEPay",
+            Title = amountMismatch ? "Thanh toán chênh lệch" : "Thanh toán thành công",
+            Message = customerNotifMessage,
             Type = "Payment",
             RelatedUrl = $"/customer/orders/detail?id={order.Id}",
             IsRead = false,
@@ -314,13 +325,34 @@ async Task<IResult> HandleSepayWebhook(HttpContext context, SEPayService sePaySe
 
         await db.SaveChangesAsync();
 
+        if (amountMismatch)
+        {
+            var supermarketOwner = await db.Users.FirstOrDefaultAsync(u => u.SupermarketId == pending.SupermarketId);
+            if (supermarketOwner != null)
+            {
+                var supermarketNotif = new Notification
+                {
+                    UserId = supermarketOwner.Id,
+                    Title = "Đơn hàng thanh toán chênh lệch",
+                    Message = $"Đơn #{orderCode} - thanh toán {paymentAmount:N0}đ / {totalAmount:N0}đ. Vui lòng kiểm tra và xác nhận.",
+                    Type = "Payment",
+                    RelatedUrl = $"/customer/orders/detail?id={order.Id}",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                db.Notifications.Add(supermarketNotif);
+            }
+        }
+
         var financeService = scope.ServiceProvider.GetRequiredService<FinanceService>();
         await financeService.AddOrderEarnings(order.Id);
 
         var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<NotificationHub>>();
+        var hubMessage = amountMismatch
+            ? $"Đơn hàng #{orderCode} đã nhận được thanh toán {paymentAmount:N0}đ (chênh lệch {totalAmount - paymentAmount:N0}đ)"
+            : $"Đơn hàng #{orderCode} đã được thanh toán qua SEPay";
         await hubContext.Clients.Group($"user_{pending.UserId}")
-            .SendAsync("ReceiveNotification", "Thanh toán thành công",
-                $"Đơn hàng #{orderCode} đã được thanh toán qua SEPay", "");
+            .SendAsync("ReceiveNotification", "Thanh toán thành công", hubMessage, "");
 
         return Results.Ok(new { message = "OK" });
     }

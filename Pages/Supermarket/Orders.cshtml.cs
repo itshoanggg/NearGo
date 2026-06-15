@@ -86,22 +86,17 @@ namespace NearGo.Pages.Supermarket
             }
             else if (status == "Received" && order.Status == "Confirmed")
             {
-                if (order.PaymentStatus == "Unpaid")
-                {
-                    order.PaymentStatus = "Paid";
-                    order.PaymentDate = DateTime.UtcNow;
-                    var sm = await _context.Supermarkets.FindAsync(order.SupermarketId);
-                    if (sm != null)
-                    {
-                        sm.TotalOrders = await _context.Orders
-                            .CountAsync(o => o.SupermarketId == order.SupermarketId && o.Status != "Cancelled");
-                        sm.TotalRevenue = await _context.Orders
-                            .Where(o => o.SupermarketId == order.SupermarketId && o.PaymentStatus == "Paid" && o.Status != "Cancelled")
-                            .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-                    }
-                }
                 order.Status = "Received";
                 order.DeliveredDate = DateTime.UtcNow;
+                var sm = await _context.Supermarkets.FindAsync(order.SupermarketId);
+                if (sm != null)
+                {
+                    sm.TotalOrders = await _context.Orders
+                        .CountAsync(o => o.SupermarketId == order.SupermarketId && o.Status != "Cancelled");
+                    sm.TotalRevenue = await _context.Orders
+                        .Where(o => o.SupermarketId == order.SupermarketId && o.PaymentStatus == "Paid" && o.Status != "Cancelled")
+                        .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+                }
                 await _financeService.AddOrderEarnings(order.Id);
             }
             else if (status == "Cancelled" && order.Status != "Received")
@@ -157,23 +152,19 @@ namespace NearGo.Pages.Supermarket
                 return RedirectToPage("ScanQR");
             }
 
-            if (order.PaymentStatus == "Unpaid")
-            {
-                order.PaymentStatus = "Paid";
-                order.PaymentDate = DateTime.UtcNow;
-                var sm = await _context.Supermarkets.FindAsync(order.SupermarketId);
-                if (sm != null)
-                {
-                    sm.TotalOrders = await _context.Orders
-                        .CountAsync(o => o.SupermarketId == order.SupermarketId && o.Status != "Cancelled");
-                    sm.TotalRevenue = await _context.Orders
-                        .Where(o => o.SupermarketId == order.SupermarketId && o.PaymentStatus == "Paid" && o.Status != "Cancelled")
-                        .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-                }
-            }
-
             order.Status = "Received";
             order.DeliveredDate = DateTime.UtcNow;
+
+            var sm = await _context.Supermarkets.FindAsync(order.SupermarketId);
+            if (sm != null)
+            {
+                sm.TotalOrders = await _context.Orders
+                    .CountAsync(o => o.SupermarketId == order.SupermarketId && o.Status != "Cancelled");
+                sm.TotalRevenue = await _context.Orders
+                    .Where(o => o.SupermarketId == order.SupermarketId && o.PaymentStatus == "Paid" && o.Status != "Cancelled")
+                    .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            }
+
             await _context.SaveChangesAsync();
 
             await _financeService.AddOrderEarnings(order.Id);

@@ -63,7 +63,7 @@ namespace NearGo.Pages.Payment
             BankName = _sePayService.GetBankName();
             AccountHolder = _sePayService.GetAccountHolder();
             TransferContent = _sePayService.GenerateTransferContent(orderCode);
-            QRUrl = _sePayService.GenerateQRUrl(orderCode);
+            QRUrl = _sePayService.GenerateQRUrl(orderCode, Amount);
 
             return Page();
         }

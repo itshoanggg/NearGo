@@ -68,9 +68,7 @@
                         <td class="py-3 text-gray-500">@o.OrderItems.Sum(i => i.Quantity)</td>
                         <td class="py-3 text-gray-900 dark:text-white font-medium">@o.TotalAmount.ToString("N0")đ</td>
                         <td class="py-3">
-                            <span class="px-2 py-0.5 rounded-full text-xs @(o.PaymentStatus == "Paid" ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600")">
-                                @(o.PaymentStatus == "Paid" ? "Đã TT" : "Chưa TT")
-                            </span>
+                            <span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-600">Đã TT</span>
                         </td>
                         <td class="py-3">
                             <span class="px-2 py-0.5 rounded-full text-xs
