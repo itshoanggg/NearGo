@@ -41,6 +41,7 @@ namespace NearGo.Pages.Supermarket.Products
             [Required]
             public DateTime ExpiryDate { get; set; }
             public string? ImageUrl { get; set; }
+            public IFormFile? ImageFile { get; set; }
             public string? Unit { get; set; } = "cái";
             public string? Origin { get; set; }
             public bool IsActive { get; set; } = true;
@@ -72,6 +73,26 @@ namespace NearGo.Pages.Supermarket.Products
             return Page();
         }
 
+        private async Task<string?> SaveImageAsync(IFormFile? file, string? url)
+        {
+            if (file != null && file.Length > 0)
+            {
+                var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "products");
+                Directory.CreateDirectory(uploadsDir);
+
+                var ext = Path.GetExtension(file.FileName);
+                var fileName = $"{Guid.NewGuid()}{ext}";
+                var filePath = Path.Combine(uploadsDir, fileName);
+
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await file.CopyToAsync(stream);
+
+                return $"/uploads/products/{fileName}";
+            }
+
+            return string.IsNullOrWhiteSpace(url) ? null : url;
+        }
+
         public async Task<IActionResult> OnPostAsync(int id)
         {
             if (!ModelState.IsValid)
@@ -99,7 +120,7 @@ namespace NearGo.Pages.Supermarket.Products
             product.DiscountPercentage = Math.Round(discountPct, 1);
             product.StockQuantity = Input.StockQuantity;
             product.ExpiryDate = Input.ExpiryDate;
-            product.ImageUrl = Input.ImageUrl ?? product.ImageUrl;
+            product.ImageUrl = await SaveImageAsync(Input.ImageFile, Input.ImageUrl) ?? product.ImageUrl;
             product.Unit = Input.Unit ?? "cái";
             product.Origin = Input.Origin;
             product.IsActive = Input.IsActive;

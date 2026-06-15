@@ -6,7 +6,7 @@
 }
 <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 max-w-3xl">
     <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Sửa sản phẩm</h2>
-    <form method="post" class="space-y-4">
+    <form method="post" enctype="multipart/form-data" class="space-y-4">
         <div asp-validation-summary="ModelOnly" class="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-xl p-3"></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2">
@@ -52,9 +52,30 @@
                 <input asp-for="Input.ExpiryDate" type="date" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" />
                 <span asp-validation-for="Input.ExpiryDate" class="text-xs text-red-500"></span>
             </div>
-            <div>
-                <label asp-for="Input.ImageUrl" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">URL hình ảnh</label>
-                <input asp-for="Input.ImageUrl" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" />
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Hình ảnh</label>
+                @if (!string.IsNullOrEmpty(Model.Input.ImageUrl))
+                {
+                    <div class="mb-3">
+                        <img src="@Model.Input.ImageUrl" alt="Current" class="w-32 h-32 object-cover rounded-xl border border-gray-200 dark:border-gray-600" />
+                    </div>
+                }
+                <div class="flex gap-4 mb-2">
+                    <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-600 dark:text-gray-300">
+                        <input type="radio" name="imageOption" value="file" checked onchange="toggleImageInput('file')" class="text-primary-500 focus:ring-primary-500" />
+                        Tải lên từ máy
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-600 dark:text-gray-300">
+                        <input type="radio" name="imageOption" value="url" onchange="toggleImageInput('url')" class="text-primary-500 focus:ring-primary-500" />
+                        Nhập URL
+                    </label>
+                </div>
+                <div id="imageFileInput">
+                    <input asp-for="Input.ImageFile" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-600 hover:file:bg-primary-100 dark:file:bg-primary-900/20 dark:file:text-primary-400 dark:hover:file:bg-primary-900/40 cursor-pointer" />
+                </div>
+                <div id="imageUrlInput" class="hidden">
+                    <input asp-for="Input.ImageUrl" placeholder="https://images.unsplash.com/..." class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" />
+                </div>
             </div>
             <div>
                 <label asp-for="Input.Origin" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Xuất xứ</label>
@@ -68,10 +89,18 @@
             </div>
         </div>
         <div class="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
-            <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-medium rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all">
+            <button type="submit" class="px-6 py-2.5 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 transition-all">
                 <i class="fas fa-save mr-1"></i> Lưu thay đổi
             </button>
             <a href="/supermarket/products" class="px-6 py-2.5 border border-gray-200 dark:border-gray-600 text-gray-500 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Hủy</a>
         </div>
     </form>
 </div>
+@section Scripts {
+    <script>
+        function toggleImageInput(mode) {
+            document.getElementById('imageFileInput').classList.toggle('hidden', mode !== 'file');
+            document.getElementById('imageUrlInput').classList.toggle('hidden', mode !== 'url');
+        }
+    </script>
+}
