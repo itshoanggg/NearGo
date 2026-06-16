@@ -22,7 +22,6 @@
                     <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50">
                         <div>
                             <span class="text-sm font-semibold text-gray-900 dark:text-white">#@order.OrderCode</span>
-                            <span class="text-xs text-gray-500 ml-2">@order.OrderDate.ToVietnamTime().ToString("dd/MM/yyyy HH:mm")</span>
                         </div>
                         <div class="flex items-center gap-3">
                             <span class="text-xs px-2 py-0.5 rounded-full font-medium @(order.Status == "Received" ? "bg-green-100 text-green-600" : order.Status == "Cancelled" ? "bg-red-100 text-red-600" : "bg-yellow-100 text-yellow-600")">
