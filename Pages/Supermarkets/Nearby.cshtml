@@ -1,0 +1,351 @@
+@page
+@model NearGo.Pages.Supermarkets.NearbyModel
+@{
+    ViewData["Title"] = "Siêu thị gần tôi";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map { height: 70vh; border-radius: 1rem; z-index: 0; }
+        .nearby-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+        .nearest-info { display: none; }
+        .nearest-info.show { display: flex; }
+        .leaflet-popup-content-wrapper { border-radius: 12px !important; }
+        .leaflet-popup-content { margin: 12px 16px; font-size: 14px; min-width: 200px; }
+        .leaflet-popup-content strong { display: block; margin-bottom: 4px; }
+        .leaflet-popup-content .popup-link { display: inline-block; margin-top: 8px; padding: 6px 14px; background: #0284c7; color: #fff; border-radius: 8px; text-decoration: none; font-size: 12px; font-weight: 500; }
+        .leaflet-popup-content .popup-link:hover { background: #0369a1; }
+        .locate-btn { padding: 10px 20px; background: #0284c7; color: #fff; border: none; border-radius: 12px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .locate-btn:hover { background: #0369a1; }
+        .locate-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .nearest-banner { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 12px; padding: 12px 16px; display: none; align-items: center; gap: 12px; }
+        .nearest-banner.show { display: flex; }
+        .nearest-banner img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+        .nearest-banner .info { flex: 1; }
+        .nearest-banner .info h3 { font-size: 14px; font-weight: 600; color: #1f2937; margin: 0; }
+        .nearest-banner .info p { font-size: 12px; color: #6b7280; margin: 2px 0 0; }
+        .nearest-banner .go-btn { padding: 6px 16px; background: #f59e0b; color: #1f2937; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 13px; }
+        .nearest-banner .go-btn:hover { background: #d97706; }
+        .loading-map { display: flex; align-items: center; justify-content: center; height: 70vh; border-radius: 1rem; background: #f9fafb; border: 1px solid #e5e7eb; color: #9ca3af; font-size: 14px; }
+        .dark .loading-map { background: #1f2937; border-color: #374151; color: #6b7280; }
+        .route-info { background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; border-radius: 8px; padding: 8px 12px; margin-top: 8px; font-size: 13px; }
+        @@media (max-width: 640px) { .nearest-banner { flex-wrap: wrap; } }
+    </style>
+}
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <div class="nearby-header mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Siêu thị gần tôi</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Tìm siêu thị gần vị trí của bạn nhất</p>
+        </div>
+        <div class="flex gap-2">
+            <button id="locateBtn" class="locate-btn" onclick="locateMe()">
+                <i class="fas fa-location-dot"></i> Định vị của tôi
+            </button>
+            <button id="clearRouteBtn" class="locate-btn" style="background:#6b7280;display:none;" onclick="clearRoute()">
+                <i class="fas fa-route"></i> Xóa chỉ đường
+            </button>
+        </div>
+    </div>
+
+    <div id="nearestBanner" class="nearest-banner mb-4">
+        <i class="fas fa-store text-2xl text-amber-500"></i>
+        <div class="info">
+            <h3 id="nearestName"></h3>
+            <p id="nearestDist"></p>
+        </div>
+        <div class="flex gap-2">
+            <a id="nearestLink" href="" class="go-btn"><i class="fas fa-arrow-right mr-1"></i> Đến trang</a>
+            <button id="nearestRouteBtn" onclick="showRouteFromBanner()" class="go-btn" style="background:#10b981;color:#fff;"><i class="fas fa-route"></i> Chỉ đường</button>
+        </div>
+    </div>
+
+    <div id="mapContainer">
+        <div id="loadingMap" class="loading-map">
+            <i class="fas fa-map mr-2"></i> Nhấn "Định vị của tôi" để xem bản đồ
+        </div>
+        <div id="map" style="display:none;"></div>
+    </div>
+
+    <div id="errorMsg" class="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl text-red-700 dark:text-red-300 text-sm hidden"></div>
+
+    <div id="manualCoords" class="mt-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hidden">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Nhập tọa độ thủ công</label>
+        <div class="flex gap-2 items-end">
+            <div>
+                <span class="text-xs text-gray-500">Vĩ độ</span>
+                <input id="manualLat" type="number" step="any" class="w-32 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-sm" placeholder="10.1234" />
+            </div>
+            <div>
+                <span class="text-xs text-gray-500">Kinh độ</span>
+                <input id="manualLng" type="number" step="any" class="w-32 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-sm" placeholder="106.1234" />
+            </div>
+            <button onclick="useManualCoords()" class="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600">
+                <i class="fas fa-check mr-1"></i>Xem bản đồ
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map, userMarker, supermarketMarkers = [], nearestId = null;
+        let supermarkets = [], userLat = null, userLng = null;
+        let locateAttempted = false, routeLine = null;
+
+        async function locateMe() {
+            const btn = document.getElementById('locateBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang định vị...';
+            document.getElementById('errorMsg').classList.add('hidden');
+
+            if (!navigator.geolocation) {
+                showError('Trình duyệt của bạn không hỗ trợ định vị GPS. Vui lòng sử dụng trình duyệt khác.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-location-dot"></i> Định vị của tôi';
+                return;
+            }
+
+            try {
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: false, timeout: 15000, maximumAge: 30000
+                    });
+                });
+                userLat = pos.coords.latitude;
+                userLng = pos.coords.longitude;
+                locateAttempted = true;
+                await loadMap();
+            } catch (err) {
+                let msg = '';
+                switch (err.code) {
+                    case 1:
+                        msg = window.location.protocol === 'http:' && window.location.hostname !== 'localhost'
+                            ? 'Trình duyệt chặn định vị trên HTTP. Vui lòng dùng HTTPS hoặc localhost.'
+                            : 'Bạn đã từ chối quyền truy cập vị trí. Vui lòng cho phép định vị trong cài đặt trình duyệt.';
+                        break;
+                    case 2:
+                        msg = 'Không thể xác định vị trí. Vui lòng bật GPS hoặc kết nối mạng và thử lại.';
+                        break;
+                    case 3:
+                        msg = 'Yêu cầu định vị bị quá thời gian. Vui lòng thử lại.';
+                        break;
+                    default:
+                        msg = 'Không thể xác định vị trí của bạn. Vui lòng thử lại.';
+                }
+                showError(msg + ' Bạn có thể nhập tọa độ thủ công bên dưới.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-location-dot"></i> Định vị của tôi';
+                document.getElementById('manualCoords').classList.remove('hidden');
+            }
+        }
+
+        async function loadMap() {
+            clearRoute();
+            const resp = await fetch('/supermarkets/nearby?handler=supermarkets');
+            supermarkets = await resp.json();
+            supermarkets = supermarkets.filter(s => s.lat && s.lng);
+
+            document.getElementById('loadingMap').style.display = 'none';
+            document.getElementById('map').style.display = 'block';
+
+            if (!map) {
+                map = L.map('map').setView([userLat, userLng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(map);
+            }
+
+            // User marker
+            const userIcon = L.divIcon({
+                html: '<div style="width:24px;height:24px;background:#0284c7;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+                className: ''
+            });
+            if (userMarker) userMarker.remove();
+            userMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(map);
+            userMarker.bindPopup('<strong>Vị trí của bạn</strong>');
+
+            // Calculate nearest
+            let minDist = Infinity;
+            let nearest = null;
+            supermarkets.forEach(s => {
+                const d = haversine(userLat, userLng, s.lat, s.lng);
+                s.dist = d;
+                if (d < minDist) { minDist = d; nearest = s; }
+            });
+
+            // Supermarket markers
+            supermarketMarkers.forEach(m => map.removeLayer(m));
+            supermarketMarkers = [];
+
+            function escHtml(str) {
+                var d = document.createElement('div');
+                d.appendChild(document.createTextNode(str));
+                return d.innerHTML;
+            }
+
+            supermarkets.forEach(s => {
+                const isNearest = s.id === nearest.id;
+                const icon = L.divIcon({
+                    html: `<div style="width:36px;height:36px;background:${isNearest ? '#f59e0b' : '#0284c7'};border:3px solid #fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">${isNearest ? '<i class="fas fa-crown"></i>' : '<i class="fas fa-store"></i>'}</div>`,
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 18],
+                    className: ''
+                });
+                var marker = L.marker([s.lat, s.lng], { icon }).addTo(map);
+
+                var popupDiv = L.DomUtil.create('div');
+                popupDiv.innerHTML =
+                    '<strong>' + escHtml(s.name) + '</strong>' +
+                    (s.address ? '<br/><span style="font-size:12px;color:#6b7280;">' + escHtml(s.address) + '</span>' : '') +
+                    (isNearest ? '<br/><span style="display:inline-block;margin-top:4px;padding:2px 8px;background:#fef3c7;border-radius:4px;font-size:11px;font-weight:600;color:#92400e;">&#9733; Gần nhất</span>' : '') +
+                    '<br/><div style="display:flex;gap:6px;margin-top:8px;">' +
+                    '<a href="/supermarkets/detail?slug=' + escHtml(s.slug) + '" class="popup-link" style="flex:1;text-align:center;">Xem siêu thị</a>' +
+                    '<button class="route-btn" style="flex:1;padding:6px 14px;background:#10b981;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;"><i class="fas fa-route"></i> Chỉ đường</button>' +
+                    '</div>';
+
+                var routeBtn = popupDiv.querySelector('.route-btn');
+                if (routeBtn) {
+                    (function (lat, lng) {
+                        L.DomEvent.on(routeBtn, 'click', function (e) {
+                            L.DomEvent.stopPropagation(e);
+                            showRoute(lat, lng);
+                        });
+                    })(s.lat, s.lng);
+                }
+
+                marker.bindPopup(popupDiv);
+                supermarketMarkers.push(marker);
+            });
+
+            // Fit bounds
+            const allLats = [userLat, ...supermarkets.map(s => s.lat)];
+            const allLngs = [userLng, ...supermarkets.map(s => s.lng)];
+            map.fitBounds([
+                [Math.min(...allLats), Math.min(...allLngs)],
+                [Math.max(...allLats), Math.max(...allLngs)]
+            ], { padding: [50, 50] });
+
+            // Show nearest banner & auto-draw route
+            nearestSupermarket = nearest;
+            showNearest(nearest, minDist);
+            showRoute(nearest.lat, nearest.lng);
+
+            document.getElementById('locateBtn').disabled = false;
+            document.getElementById('locateBtn').innerHTML = '<i class="fas fa-location-dot"></i> Định vị của tôi';
+        }
+
+        function showNearest(s, dist) {
+            const banner = document.getElementById('nearestBanner');
+            banner.classList.add('show');
+            document.getElementById('nearestName').textContent = s.name;
+            document.getElementById('nearestDist').textContent = dist < 1
+                ? Math.round(dist * 1000) + 'm'
+                : dist.toFixed(1) + 'km';
+            document.getElementById('nearestLink').href = '/supermarkets/detail?slug=' + s.slug;
+        }
+
+        function haversine(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) ** 2 +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+        }
+
+        let nearestSupermarket = null;
+
+        function showRoute(destLat, destLng) {
+            if (!userLat || !userLng) {
+                showError('Vui lòng định vị trước khi xem chỉ đường.');
+                return;
+            }
+            clearRoute();
+
+            const url = `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${destLng},${destLat}?overview=full&geometries=geojson`;
+            const btn = document.getElementById('clearRouteBtn');
+            btn.style.display = '';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tìm đường...';
+            btn.disabled = true;
+
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.code !== 'Ok' || !data.routes || !data.routes.length) {
+                        showError('Không thể tìm đường đến siêu thị này.');
+                        return;
+                    }
+                    const route = data.routes[0];
+                    const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                    routeLine = L.polyline(coords, {
+                        color: '#10b981',
+                        weight: 5,
+                        opacity: 0.8
+                    }).addTo(map);
+
+                    map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+                })
+                .catch(function () {
+                    showError('Không thể kết nối dịch vụ chỉ đường. Vui lòng thử lại sau.');
+                })
+                .finally(function () {
+                    btn.innerHTML = '<i class="fas fa-route"></i> Xóa chỉ đường';
+                    btn.disabled = false;
+                });
+        }
+
+        function clearRoute() {
+            if (routeLine) {
+                map.removeLayer(routeLine);
+                routeLine = null;
+            }
+            document.getElementById('clearRouteBtn').style.display = 'none';
+            document.getElementById('clearRouteBtn').disabled = false;
+        }
+
+        function showRouteFromBanner() {
+            if (nearestSupermarket) {
+                showRoute(nearestSupermarket.lat, nearestSupermarket.lng);
+            }
+        }
+
+        function useManualCoords() {
+            const lat = parseFloat(document.getElementById('manualLat').value);
+            const lng = parseFloat(document.getElementById('manualLng').value);
+            if (isNaN(lat) || isNaN(lng)) {
+                showError('Vui lòng nhập cả vĩ độ và kin độ hợp lệ.');
+                return;
+            }
+            if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                showError('Vĩ độ từ -90 đến 90, kinh độ từ -180 đến 180.');
+                return;
+            }
+            userLat = lat;
+            userLng = lng;
+            locateAttempted = true;
+            document.getElementById('manualCoords').classList.add('hidden');
+            loadMap();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            locateMe();
+        });
+    </script>
+}

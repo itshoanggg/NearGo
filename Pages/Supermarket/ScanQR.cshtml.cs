@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using NearGo.Data;
 using NearGo.Models;
+using NearGo.Services;
 
 namespace NearGo.Pages.Supermarket
 {
@@ -15,13 +16,15 @@ namespace NearGo.Pages.Supermarket
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
         private readonly IHubContext<Hubs.NotificationHub> _hubContext;
+        private readonly FinanceService _financeService;
 
         public ScanQRModel(ApplicationDbContext context, UserManager<AppUser> userManager,
-            IHubContext<Hubs.NotificationHub> hubContext)
+            IHubContext<Hubs.NotificationHub> hubContext, FinanceService financeService)
         {
             _context = context;
             _userManager = userManager;
             _hubContext = hubContext;
+            _financeService = financeService;
         }
 
         public List<NearGo.Models.Order> ConfirmedOrders { get; set; } = new();
@@ -91,6 +94,8 @@ namespace NearGo.Pages.Supermarket
             order.Status = "Received";
             order.DeliveredDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+
+            await _financeService.AddOrderEarnings(order.Id);
 
             try
             {

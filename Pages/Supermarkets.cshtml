@@ -31,9 +31,18 @@
                             </div>
                         </div>
                     </div>
-                    <p class="text-sm text-gray-500 line-clamp-2">@sm.Description</p>
-                    <div class="flex items-center gap-4 mt-3 text-xs text-gray-400">
-                        <span><i class="fas fa-check-circle text-green-500 mr-1"></i>@(sm.IsVerified ? "Đã xác thực" : "Chưa xác thực")</span>
+                    @if (!string.IsNullOrEmpty(sm.Description))
+                    {
+                        <p class="text-sm text-gray-500 line-clamp-2">@sm.Description</p>
+                    }
+                    @if (!string.IsNullOrEmpty(sm.Address))
+                    {
+                        <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                            <i class="fas fa-map-marker-alt shrink-0"></i>
+                            <span>@sm.Address</span>
+                        </p>
+                    }
+                    <div class="flex items-center gap-4 mt-2 text-xs text-gray-400">
                         <span><i class="fas fa-box mr-1"></i>@sm.TotalOrders đơn</span>
                     </div>
                 </div>

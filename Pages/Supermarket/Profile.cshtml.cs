@@ -43,6 +43,9 @@ namespace NearGo.Pages.Supermarket
 
             public string? Description { get; set; }
 
+            public double? Latitude { get; set; }
+            public double? Longitude { get; set; }
+
             public IFormFile? LogoFile { get; set; }
 
             public IFormFile? CoverFile { get; set; }
@@ -61,6 +64,8 @@ namespace NearGo.Pages.Supermarket
             Input.Address = Supermarket.Address ?? "";
             Input.TaxCode = Supermarket.TaxCode;
             Input.Description = Supermarket.Description;
+            Input.Latitude = Supermarket.Latitude;
+            Input.Longitude = Supermarket.Longitude;
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -73,20 +78,53 @@ namespace NearGo.Pages.Supermarket
             var supermarket = await _context.Supermarkets.FindAsync(user.SupermarketId.Value);
             if (supermarket == null) return Forbid();
 
-            var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "supermarkets");
-            Directory.CreateDirectory(uploadsDir);
-
             supermarket.Name = Input.Name;
             supermarket.Phone = Input.Phone;
-            supermarket.Address = Input.Address;
             supermarket.TaxCode = Input.TaxCode;
             supermarket.Description = Input.Description;
 
-            var logoUrl = await SaveImageAsync(Input.LogoFile, supermarket.LogoUrl, uploadsDir);
-            if (logoUrl != null) supermarket.LogoUrl = logoUrl;
+            var addressChanged = supermarket.Address != Input.Address;
+            supermarket.Address = Input.Address;
 
-            var coverUrl = await SaveImageAsync(Input.CoverFile, supermarket.CoverImageUrl, uploadsDir);
-            if (coverUrl != null) supermarket.CoverImageUrl = coverUrl;
+            if (Input.Latitude.HasValue || Input.Longitude.HasValue)
+            {
+                if (Input.Latitude.HasValue)
+                    supermarket.Latitude = Input.Latitude;
+                if (Input.Longitude.HasValue)
+                    supermarket.Longitude = Input.Longitude;
+            }
+            else if (addressChanged || supermarket.Latitude == null || supermarket.Longitude == null)
+            {
+                var coords = await GeocodeAddressAsync(Input.Address);
+                if (coords != null)
+                {
+                    supermarket.Latitude = coords.Value.lat;
+                    supermarket.Longitude = coords.Value.lng;
+                }
+                else if (addressChanged)
+                {
+                    ModelState.AddModelError(string.Empty, "Không thể tự động lấy tọa độ từ địa chỉ. Vui lòng nhập thủ công tọa độ.");
+                    return Page();
+                }
+            }
+
+            if (Input.LogoFile != null && Input.LogoFile.Length > 0)
+            {
+                using var ms = new MemoryStream();
+                await Input.LogoFile.CopyToAsync(ms);
+                supermarket.LogoData = ms.ToArray();
+                supermarket.LogoContentType = Input.LogoFile.ContentType;
+                supermarket.LogoUrl = $"/image/supermarket-logo/{supermarket.Id}";
+            }
+
+            if (Input.CoverFile != null && Input.CoverFile.Length > 0)
+            {
+                using var ms = new MemoryStream();
+                await Input.CoverFile.CopyToAsync(ms);
+                supermarket.CoverImageData = ms.ToArray();
+                supermarket.CoverImageContentType = Input.CoverFile.ContentType;
+                supermarket.CoverImageUrl = $"/image/supermarket-cover/{supermarket.Id}";
+            }
 
             user.FullName = Input.Name;
             await _userManager.UpdateAsync(user);
@@ -96,18 +134,27 @@ namespace NearGo.Pages.Supermarket
             return RedirectToPage();
         }
 
-        private static async Task<string?> SaveImageAsync(IFormFile? file, string? existingUrl, string uploadsDir)
+        private static async Task<(double lat, double lng)?> GeocodeAddressAsync(string address)
         {
-            if (file != null && file.Length > 0)
+            if (string.IsNullOrWhiteSpace(address)) return null;
+            try
             {
-                var ext = Path.GetExtension(file.FileName);
-                var fileName = $"sm_{Guid.NewGuid()}{ext}";
-                var filePath = Path.Combine(uploadsDir, fileName);
-                using var stream = new FileStream(filePath, FileMode.Create);
-                await file.CopyToAsync(stream);
-                return $"/uploads/supermarkets/{fileName}";
+                using var http = new HttpClient();
+                http.DefaultRequestHeaders.Add("User-Agent", "NearGo/1.0");
+                var url = $"https://nominatim.openstreetmap.org/search?format=json&limit=1&q={Uri.EscapeDataString(address + ", Việt Nam")}";
+                var resp = await http.GetStringAsync(url);
+                if (resp != "[]")
+                {
+                    using var json = System.Text.Json.JsonDocument.Parse(resp);
+                    var root = json.RootElement[0];
+                    var lat = double.Parse(root.GetProperty("lat").GetString()!);
+                    var lng = double.Parse(root.GetProperty("lon").GetString()!);
+                    return (lat, lng);
+                }
             }
+            catch { }
             return null;
         }
+
     }
 }

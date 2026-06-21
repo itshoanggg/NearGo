@@ -41,6 +41,7 @@ namespace NearGo.Pages.Supermarket.Products
             [Required]
             public DateTime ExpiryDate { get; set; }
             public string? ImageUrl { get; set; }
+            public IFormFile? ImageFile { get; set; }
             public string? Unit { get; set; } = "cái";
             public string? Origin { get; set; }
             public bool IsActive { get; set; } = true;
@@ -99,7 +100,18 @@ namespace NearGo.Pages.Supermarket.Products
             product.DiscountPercentage = Math.Round(discountPct, 1);
             product.StockQuantity = Input.StockQuantity;
             product.ExpiryDate = Input.ExpiryDate;
-            product.ImageUrl = Input.ImageUrl ?? product.ImageUrl;
+            if (Input.ImageFile != null && Input.ImageFile.Length > 0)
+            {
+                using var ms = new MemoryStream();
+                await Input.ImageFile.CopyToAsync(ms);
+                product.ImageData = ms.ToArray();
+                product.ImageContentType = Input.ImageFile.ContentType;
+                product.ImageUrl = $"/image/product/{product.Id}";
+            }
+            else
+            {
+                product.ImageUrl = Input.ImageUrl ?? product.ImageUrl;
+            }
             product.Unit = Input.Unit ?? "cái";
             product.Origin = Input.Origin;
             product.IsActive = Input.IsActive;

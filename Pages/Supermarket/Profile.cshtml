@@ -75,6 +75,14 @@
                     <label asp-for="Input.TaxCode" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Mã số thuế</label>
                     <input asp-for="Input.TaxCode" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" />
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Tọa độ trên bản đồ</label>
+                    <div class="flex gap-2">
+                        <input asp-for="Input.Latitude" class="w-1/2 px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" placeholder="Vĩ độ" />
+                        <input asp-for="Input.Longitude" class="w-1/2 px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" placeholder="Kinh độ" />
+                    </div>
+                    <span class="mt-2 text-xs text-gray-400"><i class="fas fa-info-circle mr-1"></i> Tự động lấy tọa độ khi lưu nếu để trống</span>
+                </div>
             </div>
 
             <div>

@@ -68,6 +68,7 @@ builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<FinanceService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddHostedService<ExpiryDiscountService>();
 
 builder.Services.AddSignalR();
 builder.Services.AddRazorPages();
@@ -314,6 +315,9 @@ async Task<IResult> HandleSepayWebhook(HttpContext context, SEPayService sePaySe
 
         await db.SaveChangesAsync();
 
+        var financeService = scope.ServiceProvider.GetRequiredService<FinanceService>();
+        await financeService.AddOrderEarnings(order.Id);
+
         var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<NotificationHub>>();
         await hubContext.Clients.Group($"user_{pending.UserId}")
             .SendAsync("ReceiveNotification", "Thanh toán thành công",
@@ -337,6 +341,34 @@ app.MapGet("/api/payment/status/{orderCode}", async (string orderCode, Applicati
     return Results.Ok(new { paid = order.PaymentStatus == "Paid" });
 });
 
+app.MapGet("/image/product/{id:int}", async (int id, ApplicationDbContext db) =>
+{
+    var product = await db.Products.FindAsync(id);
+    if (product?.ImageData == null) return Results.NotFound();
+    return Results.File(product.ImageData, product.ImageContentType ?? "image/jpeg");
+});
+
+app.MapGet("/image/supermarket-logo/{id:int}", async (int id, ApplicationDbContext db) =>
+{
+    var supermarket = await db.Supermarkets.FindAsync(id);
+    if (supermarket?.LogoData == null) return Results.NotFound();
+    return Results.File(supermarket.LogoData, supermarket.LogoContentType ?? "image/jpeg");
+});
+
+app.MapGet("/image/supermarket-cover/{id:int}", async (int id, ApplicationDbContext db) =>
+{
+    var supermarket = await db.Supermarkets.FindAsync(id);
+    if (supermarket?.CoverImageData == null) return Results.NotFound();
+    return Results.File(supermarket.CoverImageData, supermarket.CoverImageContentType ?? "image/jpeg");
+});
+
+app.MapGet("/debug/images", async (ApplicationDbContext db) =>
+{
+    var products = await db.Products.Select(p => new { p.Id, p.ImageUrl, HasData = p.ImageData != null, p.ImageContentType }).ToListAsync();
+    var supermarkets = await db.Supermarkets.Select(s => new { s.Id, HasLogo = s.LogoData != null, s.LogoContentType, s.LogoUrl, HasCover = s.CoverImageData != null, s.CoverImageContentType, s.CoverImageUrl }).ToListAsync();
+    return Results.Json(new { products, supermarkets });
+});
+
 app.MapFallbackToPage("/NotFound");
 
 try
@@ -348,6 +380,145 @@ try
 
     await SeedData.Initialize(app.Services);
     Log.Information("Seed data initialized");
+
+    // Migrate existing file-based images to database
+    var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+    var wwwroot = env.WebRootPath;
+    var migrated = 0;
+
+    var productsToMigrate = await context.Products.Where(p => p.ImageData == null).ToListAsync();
+    var productDir = Path.Combine(wwwroot, "uploads", "products");
+    var productFiles = Directory.Exists(productDir) ? Directory.GetFiles(productDir) : Array.Empty<string>();
+
+    var productFileIndex = 0;
+    foreach (var p in productsToMigrate)
+    {
+        // Try matching by the URL in DB first
+        var filePath = p.ImageUrl != null && p.ImageUrl.StartsWith("/uploads/")
+            ? Path.Combine(wwwroot, p.ImageUrl.TrimStart('/'))
+            : null;
+
+        if (filePath != null && File.Exists(filePath))
+        {
+            p.ImageData = await File.ReadAllBytesAsync(filePath);
+            p.ImageContentType = Path.GetExtension(filePath)?.ToLower() switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                _ => "image/jpeg"
+            };
+        }
+        else if (productFileIndex < productFiles.Length)
+        {
+            // Assign next available file on disk
+            var fallbackPath = productFiles[productFileIndex++];
+            p.ImageData = await File.ReadAllBytesAsync(fallbackPath);
+            p.ImageContentType = Path.GetExtension(fallbackPath)?.ToLower() switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                _ => "image/jpeg"
+            };
+        }
+
+        if (p.ImageData != null)
+        {
+            p.ImageUrl = $"/image/product/{p.Id}";
+            migrated++;
+        }
+    }
+
+    var smDir = Path.Combine(wwwroot, "uploads", "supermarkets");
+    var smFiles = Directory.Exists(smDir) ? Directory.GetFiles(smDir) : Array.Empty<string>();
+    var smFileIndex = 0;
+
+    var smToMigrate = await context.Supermarkets.Where(s => s.LogoData == null).ToListAsync();
+
+    foreach (var sm in smToMigrate)
+    {
+        var filePath = sm.LogoUrl != null && sm.LogoUrl.StartsWith("/uploads/")
+            ? Path.Combine(wwwroot, sm.LogoUrl.TrimStart('/'))
+            : null;
+
+        if (filePath != null && File.Exists(filePath))
+        {
+            sm.LogoData = await File.ReadAllBytesAsync(filePath);
+            sm.LogoContentType = Path.GetExtension(filePath)?.ToLower() switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                _ => "image/jpeg"
+            };
+        }
+        else if (smFileIndex < smFiles.Length)
+        {
+            var fallbackPath = smFiles[smFileIndex++];
+            sm.LogoData = await File.ReadAllBytesAsync(fallbackPath);
+            sm.LogoContentType = Path.GetExtension(fallbackPath)?.ToLower() switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                _ => "image/jpeg"
+            };
+        }
+
+        if (sm.LogoData != null)
+        {
+            sm.LogoUrl = $"/image/supermarket-logo/{sm.Id}";
+            migrated++;
+        }
+
+        // Cover image
+        var coverPath = sm.CoverImageUrl != null && sm.CoverImageUrl.StartsWith("/uploads/")
+            ? Path.Combine(wwwroot, sm.CoverImageUrl.TrimStart('/'))
+            : null;
+
+        if (coverPath != null && File.Exists(coverPath))
+        {
+            sm.CoverImageData = await File.ReadAllBytesAsync(coverPath);
+            sm.CoverImageContentType = Path.GetExtension(coverPath)?.ToLower() switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                _ => "image/jpeg"
+            };
+        }
+        else if (smFileIndex < smFiles.Length)
+        {
+            var fallbackPath = smFiles[smFileIndex++];
+            sm.CoverImageData = await File.ReadAllBytesAsync(fallbackPath);
+            sm.CoverImageContentType = Path.GetExtension(fallbackPath)?.ToLower() switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                _ => "image/jpeg"
+            };
+        }
+
+        if (sm.CoverImageData != null)
+        {
+            sm.CoverImageUrl = $"/image/supermarket-cover/{sm.Id}";
+            migrated++;
+        }
+    }
+
+    if (migrated > 0)
+    {
+        await context.SaveChangesAsync();
+        Log.Information("Migrated {Count} existing images to database", migrated);
+    }
 }
 catch (Exception ex)
 {

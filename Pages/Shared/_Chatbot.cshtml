@@ -74,8 +74,8 @@
             </div>
         </div>
         <div class="border-t border-gray-100 dark:border-gray-700 p-3">
-            <form @@submit.prevent="sendMessage()" class="flex gap-2">
-                <input type="text" x-model="message" @@keydown.enter.prevent="sendMessage()" placeholder="Nhập tin nhắn..." class="flex-1 px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none" />
+            <form &#64;submit.prevent="sendMessage()" class="flex gap-2">
+                <input type="text" x-model="message" &#64;keydown.enter.prevent="sendMessage()" placeholder="Nhập tin nhắn..." class="flex-1 px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none" />
                 <button type="button" @@click="sendMessage()" class="px-4 py-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors">
                     <i class="fas fa-paper-plane"></i>
                 </button>

@@ -64,24 +64,12 @@ namespace NearGo.Pages.Supermarket.Products
             public string? Tags { get; set; }
         }
 
-        private async Task<string> SaveImageAsync(IFormFile? file, string? url)
+        private async Task<byte[]?> ReadFileBytesAsync(IFormFile? file)
         {
-            if (file != null && file.Length > 0)
-            {
-                var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "products");
-                Directory.CreateDirectory(uploadsDir);
-
-                var ext = Path.GetExtension(file.FileName);
-                var fileName = $"{Guid.NewGuid()}{ext}";
-                var filePath = Path.Combine(uploadsDir, fileName);
-
-                using var stream = new FileStream(filePath, FileMode.Create);
-                await file.CopyToAsync(stream);
-
-                return $"/uploads/products/{fileName}";
-            }
-
-            return url ?? "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";
+            if (file == null || file.Length == 0) return null;
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            return ms.ToArray();
         }
 
         public async Task OnGetAsync()
@@ -103,8 +91,21 @@ namespace NearGo.Pages.Supermarket.Products
             var supermarket = await _context.Supermarkets.FindAsync(user.SupermarketId.Value);
             if (supermarket == null) return Forbid();
 
+            if (supermarket.SubscriptionTier == "Free")
+            {
+                var activeCount = await _context.Products
+                    .CountAsync(p => p.SupermarketId == user.SupermarketId.Value && p.IsActive && p.StockQuantity > 0 && p.ExpiryDate > DateTime.UtcNow);
+                if (activeCount >= 10)
+                {
+                    TempData["Error"] = "Tài khoản Free chỉ được đăng tối đa 10 sản phẩm. Vui lòng nâng cấp lên Premium để đăng thêm.";
+                    return RedirectToPage("/Supermarket/Products/Add");
+                }
+            }
+
             var discountedPrice = Input.DiscountedPrice > 0 ? Input.DiscountedPrice : Input.OriginalPrice;
             var discountPct = Input.OriginalPrice > 0 ? (double)((Input.OriginalPrice - discountedPrice) / Input.OriginalPrice * 100) : 0;
+
+            var imageBytes = await ReadFileBytesAsync(Input.ImageFile);
 
             var product = new NearGo.Models.Product
             {
@@ -118,7 +119,9 @@ namespace NearGo.Pages.Supermarket.Products
                 DiscountPercentage = Math.Round(discountPct, 1),
                 StockQuantity = Input.StockQuantity,
                 ExpiryDate = Input.ExpiryDate,
-                ImageUrl = await SaveImageAsync(Input.ImageFile, Input.ImageUrl),
+                ImageUrl = Input.ImageUrl ?? "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400",
+                ImageData = imageBytes,
+                ImageContentType = imageBytes != null ? Input.ImageFile!.ContentType : null,
                 Unit = Input.Unit ?? "cái",
                 Origin = Input.Origin,
                 Tags = Input.Tags,
@@ -129,48 +132,57 @@ namespace NearGo.Pages.Supermarket.Products
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            var supermarketName = supermarket.Name;
-            var ownerId = user.Id;
-
-            var followerIds = await _context.Database
-                .SqlQuery<string>($"SELECT UserId FROM UserFollowedSupermarkets WHERE SupermarketId = {user.SupermarketId.Value}")
-                .ToListAsync();
-
-            if (followerIds.Count > 0)
+            if (product.ImageData != null)
             {
-                var productUrl = $"/products/detail?id={product.Id}";
-                var title = $"Sản phẩm mới từ {supermarketName}";
-                var message = $"{product.Name} - chỉ {product.DiscountedPrice:N0}đ";
-
-                foreach (var fid in followerIds)
-                {
-                    if (fid == ownerId) continue;
-
-                    _context.Notifications.Add(new Notification
-                    {
-                        UserId = fid,
-                        Title = title,
-                        Message = message,
-                        Type = "NewProduct",
-                        RelatedUrl = productUrl,
-                        ImageUrl = product.ImageUrl,
-                        IsRead = false,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                }
-
+                product.ImageUrl = $"/image/product/{product.Id}";
                 await _context.SaveChangesAsync();
+            }
 
-                foreach (var fid in followerIds)
+            if (supermarket.SubscriptionTier == "Premium")
+            {
+                var supermarketName = supermarket.Name;
+                var ownerId = user.Id;
+
+                var followerIds = await _context.Database
+                    .SqlQuery<string>($"SELECT UserId FROM UserFollowedSupermarkets WHERE SupermarketId = {user.SupermarketId.Value}")
+                    .ToListAsync();
+
+                if (followerIds.Count > 0)
                 {
-                    if (fid == ownerId) continue;
+                    var productUrl = $"/products/detail?id={product.Id}";
+                    var title = $"Sản phẩm mới từ {supermarketName}";
+                    var message = $"{product.Name} - chỉ {product.DiscountedPrice:N0}đ";
 
-                    try
+                    foreach (var fid in followerIds)
                     {
-                        await _hubContext.Clients.Group($"user_{fid}")
-                            .SendAsync("ReceiveNotification", title, message, productUrl);
+                        if (fid == ownerId) continue;
+
+                        _context.Notifications.Add(new Notification
+                        {
+                            UserId = fid,
+                            Title = title,
+                            Message = message,
+                            Type = "NewProduct",
+                            RelatedUrl = productUrl,
+                            ImageUrl = product.ImageUrl,
+                            IsRead = false,
+                            CreatedAt = DateTime.UtcNow
+                        });
                     }
-                    catch { }
+
+                    await _context.SaveChangesAsync();
+
+                    foreach (var fid in followerIds)
+                    {
+                        if (fid == ownerId) continue;
+
+                        try
+                        {
+                            await _hubContext.Clients.Group($"user_{fid}")
+                                .SendAsync("ReceiveNotification", title, message, productUrl);
+                        }
+                        catch { }
+                    }
                 }
             }
 

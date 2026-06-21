@@ -80,7 +80,7 @@
                         <input type="number" id="qty" value="1" min="1" max="@Model.Product.StockQuantity" class="w-12 text-center py-2 text-sm font-medium bg-transparent border-x border-gray-200 dark:border-gray-600 outline-none" />
                         <button onclick="updateQty(1)" class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-plus text-xs"></i></button>
                     </div>
-                    <button onclick="addToCart(@Model.Product.Id, document.getElementById('qty').value)" class="flex-1 py-3 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 shadow-md transition-all">
+                    <button onclick="addToCart(@Model.Product.Id, document.getElementById('qty').value)" class="flex-1 py-3 bg-accent-500 text-gray-900 font-medium rounded-xl hover:bg-accent-600 shadow-md transition-all">
                         <i class="fas fa-shopping-cart mr-2"></i>Thêm vào giỏ
                     </button>
                 </div>

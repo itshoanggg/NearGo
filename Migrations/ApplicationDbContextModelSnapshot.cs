@@ -724,6 +724,9 @@ namespace NearGo.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AutoDiscountApplied")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("BoostExpiry")
                         .HasColumnType("datetime2");
 
@@ -745,6 +748,12 @@ namespace NearGo.Migrations
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageContentType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("ImageData")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
@@ -991,6 +1000,12 @@ namespace NearGo.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("CoverImageContentType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("CoverImageData")
+                        .HasColumnType("varbinary(max)");
+
                     b.Property<string>("CoverImageUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -1009,8 +1024,20 @@ namespace NearGo.Migrations
                     b.Property<bool>("IsVerified")
                         .HasColumnType("bit");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<string>("LogoContentType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("LogoData")
+                        .HasColumnType("varbinary(max)");
+
                     b.Property<string>("LogoUrl")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("float");
 
                     b.Property<string>("Name")
                         .IsRequired()

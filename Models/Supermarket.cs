@@ -9,6 +9,12 @@ namespace NearGo.Models
         public string? LogoUrl { get; set; }
         public string? CoverImageUrl { get; set; }
         public string? Address { get; set; }
+        public byte[]? LogoData { get; set; }
+        public string? LogoContentType { get; set; }
+        public byte[]? CoverImageData { get; set; }
+        public string? CoverImageContentType { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
         public string? Phone { get; set; }
         public string? Email { get; set; }
         public string? TaxCode { get; set; }

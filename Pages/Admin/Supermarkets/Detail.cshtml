@@ -89,11 +89,7 @@
 
     <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Thông tin khác</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-                <p class="text-gray-400">Ngày tham gia</p>
-                <p class="text-gray-900 dark:text-white font-medium">@Model.Supermarket.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</p>
-            </div>
+        <div class="grid grid-cols-2 gap-4 text-sm">
             <div>
                 <p class="text-gray-400">Số sản phẩm</p>
                 <p class="text-gray-900 dark:text-white font-medium">@Model.Supermarket.Products.Count</p>
@@ -102,10 +98,7 @@
                 <p class="text-gray-400">Tổng đơn hàng</p>
                 <p class="text-gray-900 dark:text-white font-medium">@Model.Supermarket.TotalOrders</p>
             </div>
-            <div>
-                <p class="text-gray-400">Mã số thuế</p>
-                <p class="text-gray-900 dark:text-white font-medium">@(Model.Supermarket.TaxCode ?? "—")</p>
-            </div>
+
         </div>
     </div>
 </div>
@@ -120,8 +113,8 @@
                 datasets: [{
                     label: 'Doanh thu',
                     data: @Html.Raw(Model.RevenueChartData),
-                    backgroundColor: 'rgba(220,38,38,0.6)',
-                    borderColor: '#dc2626',
+                    backgroundColor: 'rgba(2,132,199,0.6)',
+                    borderColor: '#0284c7',
                     borderWidth: 1,
                     borderRadius: 6,
                 }]

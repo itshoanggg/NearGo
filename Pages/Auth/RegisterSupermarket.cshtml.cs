@@ -107,11 +107,24 @@ namespace NearGo.Pages.Auth
 
             var slug = GenerateSlug(Input.SupermarketName);
 
-            var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "supermarkets");
-            Directory.CreateDirectory(uploadsDir);
+            byte[]? logoBytes = null, coverBytes = null;
+            string? logoContentType = null, coverContentType = null;
 
-            var logoUrl = await SaveImageAsync(Input.LogoFile, null, uploadsDir);
-            var coverUrl = await SaveImageAsync(Input.CoverFile, null, uploadsDir);
+            if (Input.LogoFile != null && Input.LogoFile.Length > 0)
+            {
+                using var ms = new MemoryStream();
+                await Input.LogoFile.CopyToAsync(ms);
+                logoBytes = ms.ToArray();
+                logoContentType = Input.LogoFile.ContentType;
+            }
+
+            if (Input.CoverFile != null && Input.CoverFile.Length > 0)
+            {
+                using var ms = new MemoryStream();
+                await Input.CoverFile.CopyToAsync(ms);
+                coverBytes = ms.ToArray();
+                coverContentType = Input.CoverFile.ContentType;
+            }
 
             var supermarket = new NearGo.Models.Supermarket
             {
@@ -122,14 +135,26 @@ namespace NearGo.Pages.Auth
                 Address = Input.Address,
                 TaxCode = Input.TaxCode,
                 Description = Input.Description,
-                LogoUrl = logoUrl,
-                CoverImageUrl = coverUrl,
+                LogoData = logoBytes,
+                LogoContentType = logoContentType,
+                CoverImageData = coverBytes,
+                CoverImageContentType = coverContentType,
                 IsActive = true,
                 IsVerified = false,
                 CreatedAt = DateTime.UtcNow
             };
 
             _context.Supermarkets.Add(supermarket);
+            await _context.SaveChangesAsync();
+
+            if (supermarket.LogoData != null)
+            {
+                supermarket.LogoUrl = $"/image/supermarket-logo/{supermarket.Id}";
+            }
+            if (supermarket.CoverImageData != null)
+            {
+                supermarket.CoverImageUrl = $"/image/supermarket-cover/{supermarket.Id}";
+            }
             await _context.SaveChangesAsync();
 
             user.SupermarketId = supermarket.Id;
@@ -139,20 +164,6 @@ namespace NearGo.Pages.Auth
 
             TempData["Success"] = "Đăng ký siêu thị thành công!";
             return RedirectToPage("/Auth/Login");
-        }
-
-        private async Task<string?> SaveImageAsync(IFormFile? file, string? existingUrl, string uploadsDir)
-        {
-            if (file != null && file.Length > 0)
-            {
-                var ext = Path.GetExtension(file.FileName);
-                var fileName = $"sm_{Guid.NewGuid()}{ext}";
-                var filePath = Path.Combine(uploadsDir, fileName);
-                using var stream = new FileStream(filePath, FileMode.Create);
-                await file.CopyToAsync(stream);
-                return $"/uploads/supermarkets/{fileName}";
-            }
-            return existingUrl;
         }
 
         private string GenerateSlug(string name)

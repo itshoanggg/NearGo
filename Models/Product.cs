@@ -12,6 +12,8 @@ namespace NearGo.Models
         public int StockQuantity { get; set; }
         public DateTime ExpiryDate { get; set; }
         public string? ImageUrl { get; set; }
+        public byte[]? ImageData { get; set; }
+        public string? ImageContentType { get; set; }
         public string? ImageUrls { get; set; }
         public string? Unit { get; set; } = "cái";
         public double Weight { get; set; }
@@ -22,6 +24,7 @@ namespace NearGo.Models
         public int ViewCount { get; set; }
         public int SoldCount { get; set; }
         public double SmartExpiryScore { get; set; }
+        public bool AutoDiscountApplied { get; set; }
         public string? Tags { get; set; }
         public int CategoryId { get; set; }
         public int SupermarketId { get; set; }

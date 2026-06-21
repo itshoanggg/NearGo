@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    @RenderSection("Styles", required: false)
 
     <script>
         tailwind.config = {
@@ -21,8 +22,8 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: { 50: '#fef2f2', 100: '#fee2e2', 200: '#fecaca', 300: '#fca5a5', 400: '#f87171', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#7f1d1d', 950: '#450a0a' },
-                        accent: { 50: '#fffbeb', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d', 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f' },
+                        primary: { 50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e', 950: '#082f49' },
+                        accent: { 50: '#fffbea', 100: '#fff3c4', 200: '#fce588', 300: '#fadb5f', 400: '#f7d13a', 500: '#f5c518', 600: '#e5b800', 700: '#c49a00', 800: '#a37d00', 900: '#7a5e00' },
                         success: { 50: '#f0fdf4', 500: '#22c55e', 600: '#16a34a' },
                         danger: { 50: '#fef2f2', 500: '#ef4444', 600: '#dc2626' },
                         warning: { 50: '#fffbeb', 500: '#f59e0b', 600: '#d97706' },
@@ -48,7 +49,7 @@
 
     @{
         var gaMeasurementId = Context.RequestServices.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>().GetSection("GoogleAnalytics")["MeasurementId"] ?? "";
-        gaMeasurementId = System.Text.RegularExpressions.Regex.Replace(gaMeasurementId, @"[^G\d-]", "");
+        gaMeasurementId = System.Text.RegularExpressions.Regex.Replace(gaMeasurementId, @"[^G\dA-Z-]", "");
     }
     @if (!string.IsNullOrEmpty(gaMeasurementId) && gaMeasurementId.StartsWith("G-"))
     {
@@ -85,8 +86,11 @@
                             <a href="/products" class="px-4 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors @(Context.Request.Path.StartsWithSegments("/products") ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20" : "text-gray-600 dark:text-gray-300")">
                                 <i class="fas fa-box mr-1.5"></i>Sản phẩm
                             </a>
-                            <a href="/supermarkets" class="px-4 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors @(Context.Request.Path.StartsWithSegments("/supermarkets") ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20" : "text-gray-600 dark:text-gray-300")">
+                            <a href="/supermarkets" class="px-4 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors @((Context.Request.Path.StartsWithSegments("/supermarkets") && !Context.Request.Path.StartsWithSegments("/supermarkets/nearby")) ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20" : "text-gray-600 dark:text-gray-300")">
                                 <i class="fas fa-store mr-1.5"></i>Siêu thị
+                            </a>
+                            <a href="/supermarkets/nearby" class="px-4 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors @(Context.Request.Path.StartsWithSegments("/supermarkets/nearby") ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20" : "text-gray-600 dark:text-gray-300")">
+                                <i class="fas fa-location-dot mr-1.5"></i>Gần tôi
                             </a>
                         </div>
                     </div>
@@ -199,7 +203,7 @@
                         else
                         {
                             <a href="/auth/login" class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">Đăng nhập</a>
-                            <a href="/auth/register" class="px-5 py-2 text-sm font-medium bg-primary-600 text-white rounded-xl hover:bg-primary-700 shadow-md hover:shadow-lg transition-all">Đăng ký</a>
+                            <a href="/auth/register" class="px-5 py-2 text-sm font-medium bg-accent-500 text-gray-900 rounded-xl hover:bg-accent-600 shadow-md hover:shadow-lg transition-all">Đăng ký</a>
                         }
                         <button id="mobile-menu-toggle" class="lg:hidden p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
                             <i class="fas fa-bars text-lg text-gray-600 dark:text-gray-300"></i>
@@ -211,9 +215,10 @@
                         <input type="text" name="search" placeholder="Tìm sản phẩm..." class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 outline-none" />
                     </form>
                     <div class="space-y-1">
-                        <a href="/" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"><i class="fas fa-home w-5 text-primary-500"></i>Trang chủ</a>
-                        <a href="/products" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"><i class="fas fa-box w-5 text-primary-500"></i>Sản phẩm</a>
-                        <a href="/supermarkets" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"><i class="fas fa-store w-5 text-primary-500"></i>Siêu thị</a>
+                        <a href="/" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 @(Context.Request.Path == "/" ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20" : "text-gray-600 dark:text-gray-300")"><i class="fas fa-home w-5 text-primary-500"></i>Trang chủ</a>
+                        <a href="/products" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 @(Context.Request.Path.StartsWithSegments("/products") ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20" : "text-gray-600 dark:text-gray-300")"><i class="fas fa-box w-5 text-primary-500"></i>Sản phẩm</a>
+                        <a href="/supermarkets" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 @((Context.Request.Path.StartsWithSegments("/supermarkets") && !Context.Request.Path.StartsWithSegments("/supermarkets/nearby")) ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20" : "text-gray-600 dark:text-gray-300")"><i class="fas fa-store w-5 text-primary-500"></i>Siêu thị</a>
+                        <a href="/supermarkets/nearby" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 @(Context.Request.Path.StartsWithSegments("/supermarkets/nearby") ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20" : "text-gray-600 dark:text-gray-300")"><i class="fas fa-location-dot w-5 text-primary-500"></i>Gần tôi</a>
                     </div>
                 </div>
             </nav>

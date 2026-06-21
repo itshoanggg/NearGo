@@ -1,0 +1,160 @@
+@page
+@model NearGo.Pages.Admin.Users.DetailModel
+@{
+    ViewData["Title"] = "Chi tiết người dùng";
+    Layout = "_AdminLayout";
+}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <a href="/admin/users" class="text-sm text-primary-500 hover:text-primary-600 mb-2 inline-block">
+                <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách
+            </a>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Chi tiết người dùng</h2>
+        </div>
+        <form method="post" asp-page-handler="ToggleActive" class="inline">
+            <input type="hidden" name="id" value="@Model.UserDetail.Id" />
+            <button type="button" onclick="confirmToggle(this)"
+                    class="px-4 py-2 text-sm font-medium rounded-xl transition-all @(Model.UserDetail.IsActive ? "bg-red-500 text-white hover:bg-red-600" : "bg-green-500 text-white hover:bg-green-600")">
+                <i class="fas @(Model.UserDetail.IsActive ? "fa-lock" : "fa-unlock") mr-1.5"></i>
+                @(Model.UserDetail.IsActive ? "Khóa tài khoản" : "Mở khóa tài khoản")
+            </button>
+        </form>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6">
+        <div class="md:col-span-1">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                <div class="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-500 font-bold text-2xl mx-auto mb-3">
+                    @(Model.UserDetail.FullName?.Substring(0, 1) ?? "?")
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">@Model.UserDetail.FullName</h3>
+                <span class="px-3 py-1 rounded-full text-xs font-medium inline-block mt-2
+                    @(Model.Role == "Admin" ? "bg-purple-100 text-purple-600" :
+                      Model.Role == "Supermarket" ? "bg-amber-100 text-amber-600" :
+                      "bg-blue-100 text-blue-600")">
+                    @(Model.Role == "Admin" ? "Admin" : Model.Role == "Supermarket" ? "Siêu thị" : "Khách hàng")
+                </span>
+                <div class="mt-4">
+                    <span class="px-3 py-1 rounded-full text-xs font-medium @(Model.UserDetail.IsActive ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")">
+                        @(Model.UserDetail.IsActive ? "Đang hoạt động" : "Đã khóa")
+                    </span>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 mt-4">
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">@Model.TotalOrders</p>
+                        <p class="text-xs text-gray-500">Đơn hàng</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">@Model.TotalSpent.ToString("N0")đ</p>
+                        <p class="text-xs text-gray-500">Đã chi tiêu</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="md:col-span-2">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Thông tin cá nhân</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs text-gray-500 uppercase tracking-wider">Tên đầy đủ</label>
+                        <p class="text-gray-900 dark:text-white font-medium">@Model.UserDetail.FullName</p>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 uppercase tracking-wider">Tên đăng nhập</label>
+                        <p class="text-gray-900 dark:text-white font-medium">@Model.UserDetail.UserName</p>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 uppercase tracking-wider">Email</label>
+                        <p class="text-gray-900 dark:text-white font-medium">@Model.UserDetail.Email</p>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 uppercase tracking-wider">Số điện thoại</label>
+                        <p class="text-gray-900 dark:text-white font-medium">@(Model.UserDetail.PhoneNumber ?? "—")</p>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 uppercase tracking-wider">Địa chỉ</label>
+                        <p class="text-gray-900 dark:text-white font-medium">@(Model.UserDetail.Address ?? "—")</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 mt-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Đơn hàng gần đây</h3>
+                @if (Model.UserDetail.Orders.Any())
+                {
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-gray-500 border-b border-gray-100 dark:border-gray-700">
+                                    <th class="pb-3 font-medium">Mã đơn</th>
+                                    <th class="pb-3 font-medium">Tổng tiền</th>
+                                    <th class="pb-3 font-medium">Trạng thái</th>
+                                    <th class="pb-3 font-medium">Thanh toán</th>
+                                    <th class="pb-3 font-medium">Ngày</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var order in Model.UserDetail.Orders.OrderByDescending(o => o.OrderDate).Take(5))
+                                {
+                                    <tr class="border-b border-gray-50 dark:border-gray-800">
+                                        <td class="py-3 text-gray-900 dark:text-white font-medium">#@order.OrderCode</td>
+                                        <td class="py-3 text-gray-900 dark:text-white font-medium">@order.TotalAmount.ToString("N0")đ</td>
+                                        <td class="py-3">
+                                            <span class="px-2 py-0.5 rounded-full text-xs
+                                                @(order.Status == "Received" ? "bg-green-100 text-green-600" :
+                                                  order.Status == "Cancelled" ? "bg-red-100 text-red-600" :
+                                                  "bg-amber-100 text-amber-600")">
+                                                @(order.Status == "Pending" ? "Chờ xác nhận" :
+                                                  order.Status == "Confirmed" ? "Đã xác nhận" :
+                                                  order.Status == "Received" ? "Đã nhận" :
+                                                  order.Status == "Cancelled" ? "Đã hủy" : order.Status)
+                                            </span>
+                                        </td>
+                                        <td class="py-3">
+                                            <span class="px-2 py-0.5 rounded-full text-xs @(order.PaymentStatus == "Paid" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")">
+                                                @(order.PaymentStatus == "Paid" ? "Đã thanh toán" : "Chưa thanh toán")
+                                            </span>
+                                        </td>
+                                        <td class="py-3 text-gray-500">@order.OrderDate.ToString("dd/MM/yyyy")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-gray-400 text-sm">Người dùng chưa có đơn hàng nào.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function confirmToggle(btn) {
+            const form = btn.closest('form');
+            const isLock = '@Model.UserDetail.IsActive' === 'True';
+            Swal.fire({
+                title: isLock ? 'Khóa tài khoản?' : 'Mở khóa tài khoản?',
+                text: isLock ? `Tài khoản "@Model.UserDetail.FullName" sẽ không thể đăng nhập.` : `Tài khoản "@Model.UserDetail.FullName" sẽ hoạt động trở lại.`,
+                icon: isLock ? 'warning' : 'question',
+                showCancelButton: true,
+                confirmButtonColor: isLock ? '#dc2626' : '#16a34a',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: isLock ? 'Khóa' : 'Mở khóa',
+                cancelButtonText: 'Hủy',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}

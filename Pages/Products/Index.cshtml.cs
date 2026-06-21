@@ -75,11 +75,11 @@ namespace NearGo.Pages.Products
 
             query = Sort switch
             {
-                "price-asc" => query.OrderBy(p => p.DiscountedPrice),
-                "price-desc" => query.OrderByDescending(p => p.DiscountedPrice),
-                "discount" => query.OrderByDescending(p => p.DiscountPercentage),
-                "expiry" => query.OrderBy(p => p.ExpiryDate),
-                _ => query.OrderByDescending(p => p.CreatedAt)
+                "price-asc" => query.OrderByDescending(p => p.Supermarket.SubscriptionTier == "Premium").ThenBy(p => p.DiscountedPrice),
+                "price-desc" => query.OrderByDescending(p => p.Supermarket.SubscriptionTier == "Premium").ThenByDescending(p => p.DiscountedPrice),
+                "discount" => query.OrderByDescending(p => p.Supermarket.SubscriptionTier == "Premium").ThenByDescending(p => p.DiscountPercentage),
+                "expiry" => query.OrderByDescending(p => p.Supermarket.SubscriptionTier == "Premium").ThenBy(p => p.ExpiryDate),
+                _ => query.OrderByDescending(p => p.Supermarket.SubscriptionTier == "Premium").ThenByDescending(p => p.CreatedAt)
             };
 
             TotalCount = await query.CountAsync();

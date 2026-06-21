@@ -50,13 +50,12 @@
                     <th class="pb-3 font-medium">Tổng</th>
                     <th class="pb-3 font-medium">Thanh toán</th>
                     <th class="pb-3 font-medium">Trạng thái</th>
-                    <th class="pb-3 font-medium">Ngày</th>
                 </tr>
             </thead>
             <tbody>
                 @if (!Model.Orders.Any())
                 {
-                    <tr><td colspan="8" class="py-8 text-center text-gray-400">Không có đơn hàng nào</td></tr>
+                    <tr><td colspan="7" class="py-8 text-center text-gray-400">Không có đơn hàng nào</td></tr>
                 }
                 @foreach (var o in Model.Orders)
                 {
@@ -84,7 +83,6 @@
                                   o.Status == "Received" ? "Đã nhận" : "Đã hủy")
                             </span>
                         </td>
-                        <td class="py-3 text-gray-500 text-xs">@o.OrderDate.ToVietnamTime().ToString("dd/MM HH:mm")</td>
                     </tr>
                 }
             </tbody>

@@ -30,9 +30,9 @@
                     </a>
                 </div>
                 <div class="flex gap-8 mt-8 text-white/70">
-                    <div><span class="text-2xl font-bold text-white">100+</span><p class="text-xs">Siêu thị</p></div>
-                    <div><span class="text-2xl font-bold text-white">5000+</span><p class="text-xs">Sản phẩm</p></div>
-                    <div><span class="text-2xl font-bold text-white">50%</span><p class="text-xs">Tiết kiệm</p></div>
+                    <div><span class="text-2xl font-bold text-white">@Model.TotalSupermarkets+</span><p class="text-xs">Siêu thị</p></div>
+                    <div><span class="text-2xl font-bold text-white">@Model.TotalProducts+</span><p class="text-xs">Sản phẩm</p></div>
+                    <div><span class="text-2xl font-bold text-white">@((int)Model.MaxDiscountPercentage)%</span><p class="text-xs">Tiết kiệm</p></div>
                 </div>
             </div>
             <div class="hidden md:block" data-aos="fade-left">
@@ -139,8 +139,8 @@
                         }
                     </div>
                     <div class="flex items-center justify-between mt-2">
-                        <span class="text-xs text-gray-400"><i class="far fa-clock mr-1"></i>Còn @((product.ExpiryDate - DateTime.UtcNow).Days) ngày</span>
-                        <button onclick="addToCart(@product.Id)" class="w-8 h-8 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-all shadow-sm shadow-primary-500/30">
+                        <span class="text-xs @((product.ExpiryDate - DateTime.UtcNow).Days <= 7 ? "text-red-500 font-medium" : "text-gray-400")"><i class="far fa-clock mr-1"></i>Còn @((product.ExpiryDate - DateTime.UtcNow).Days) ngày</span>
+                        <button onclick="addToCart(@product.Id)" class="w-8 h-8 bg-accent-500 text-gray-900 rounded-lg hover:bg-accent-600 transition-all shadow-sm shadow-accent-500/30">
                             <i class="fas fa-plus text-xs"></i>
                         </button>
                     </div>
