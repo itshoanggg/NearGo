@@ -118,4 +118,44 @@
             reader.readAsDataURL(input.files[0]);
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.querySelector('form');
+        var latInput = document.getElementById('Input_Latitude');
+        var lngInput = document.getElementById('Input_Longitude');
+        var submitting = false;
+
+        if (form && latInput && lngInput) {
+            form.addEventListener('submit', function (e) {
+                var lat = latInput.value.trim();
+                var lng = lngInput.value.trim();
+
+                if ((lat === '' || lng === '') && !submitting && navigator.geolocation) {
+                    e.preventDefault();
+                    var btn = form.querySelector('button[type=submit]');
+                    var originalHtml = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang lấy vị trí...';
+
+                    navigator.geolocation.getCurrentPosition(
+                        function (position) {
+                            latInput.value = position.coords.latitude;
+                            lngInput.value = position.coords.longitude;
+                            btn.disabled = false;
+                            btn.innerHTML = originalHtml;
+                            submitting = true;
+                            form.submit();
+                        },
+                        function () {
+                            btn.disabled = false;
+                            btn.innerHTML = originalHtml;
+                            submitting = true;
+                            form.submit();
+                        },
+                        { timeout: 10000 }
+                    );
+                }
+            });
+        }
+    });
 </script>
