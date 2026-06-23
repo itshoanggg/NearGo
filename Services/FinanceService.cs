@@ -160,49 +160,6 @@ namespace NearGo.Services
             return true;
         }
 
-        public async Task ProcessAutoPayouts()
-        {
-            var now = DateTime.UtcNow;
-            var lastWeek = now.AddDays(-7);
-            var weekNumber = System.Globalization.CultureInfo.InvariantCulture.Calendar
-                .GetWeekOfYear(lastWeek, System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
-            var year = lastWeek.Year;
-
-            var supermarkets = await _context.Supermarkets
-                .Include(s => s.BankInfo)
-                .Where(s => s.Balance > 0 && s.BankInfo != null)
-                .ToListAsync();
-
-            foreach (var supermarket in supermarkets)
-            {
-                var bankInfoJson = JsonSerializer.Serialize(new
-                {
-                    supermarket.BankInfo!.BankName,
-                    supermarket.BankInfo.AccountNumber,
-                    supermarket.BankInfo.AccountHolder
-                });
-
-                var request = new WithdrawalRequest
-                {
-                    SupermarketId = supermarket.Id,
-                    Amount = supermarket.Balance,
-                    CommissionPercent = 0,
-                    CommissionAmount = 0,
-                    FinalAmount = supermarket.Balance,
-                    Status = "Pending",
-                    BankInfoJson = bankInfoJson,
-                    RequestedAt = now,
-                    IsAutoPayout = true,
-                    PeriodMonth = weekNumber,
-                    PeriodYear = year
-                };
-
-                _context.WithdrawalRequests.Add(request);
-            }
-
-            await _context.SaveChangesAsync();
-        }
-
         public async Task<decimal> GetBalance(int supermarketId)
         {
             var supermarket = await _context.Supermarkets.FindAsync(supermarketId);

@@ -82,10 +82,6 @@
                             <div>
                                 <p class="text-sm font-medium text-gray-900 dark:text-white">@w.Amount.ToString("N0")đ</p>
                                 <p class="text-xs text-gray-500">@w.RequestedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
-                                @if (w.IsAutoPayout)
-                                {
-                                    <span class="text-xs text-blue-500">Tự động tuần @w.PeriodMonth/@w.PeriodYear</span>
-                                }
                             </div>
                             <div class="text-right">
                                 @if (w.Status == "Pending")
