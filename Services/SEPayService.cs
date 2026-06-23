@@ -21,10 +21,15 @@ namespace NearGo.Services
             return $"SEVQR TKP{orderCode}";
         }
 
-        public string GenerateQRUrl(string orderCode)
+        public string GenerateQRUrl(string orderCode, decimal? amount = null)
         {
             var content = GenerateTransferContent(orderCode);
-            return $"{_settings.QRBaseUrl}?acc={_settings.BankAccount}&bank={_settings.BankName}&des={Uri.EscapeDataString(content)}";
+            var url = $"{_settings.QRBaseUrl}?acc={_settings.BankAccount}&bank={_settings.BankName}&des={Uri.EscapeDataString(content)}";
+            if (amount.HasValue && amount.Value > 0)
+            {
+                url += $"&amount={amount.Value:0}";
+            }
+            return url;
         }
 
         public string GenerateReturnUrl(string orderCode)
