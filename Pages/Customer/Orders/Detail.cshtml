@@ -86,17 +86,7 @@
                             @(Model.Order.PaymentStatus == "Paid" ? "Đã thanh toán" : Model.Order.PaymentStatus == "Unpaid" ? "Chưa thanh toán" : Model.Order.PaymentStatus)
                         </span>
                     </div>
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-gray-400">Ngày đặt</span>
-                        <span class="text-gray-900 dark:text-white">@Model.Order.OrderDate.ToVietnamTime().ToString("dd/MM/yyyy HH:mm")</span>
-                    </div>
-                    @if (Model.Order.DeliveredDate.HasValue)
-                    {
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-gray-400">Ngày giao</span>
-                            <span class="text-gray-900 dark:text-white">@Model.Order.DeliveredDate.Value.ToString("dd/MM/yyyy HH:mm")</span>
-                        </div>
-                    }
+
                     @if (Model.Order.PaymentMethod != null)
                     {
                         <div class="flex items-center justify-between text-sm">
