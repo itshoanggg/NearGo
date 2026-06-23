@@ -174,7 +174,7 @@
                 data: {
                     labels: ['Khách hàng', 'Siêu thị', 'Admin'],
                     datasets: [{
-                        data: [@(Model.TotalUsers - Model.TotalSupermarkets - 1), @Model.TotalSupermarkets, 1],
+                        data: [@Model.TotalUsers, @Model.TotalSupermarkets, 1],
                         backgroundColor: ['#0ea5e9', '#f59e0b', '#8b5cf6'],
                         borderWidth: 0,
                     }]

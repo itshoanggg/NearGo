@@ -15,14 +15,12 @@ namespace NearGo.Pages.Checkout
     {
         private readonly ApplicationDbContext _context;
         private readonly CartService _cartService;
-        private readonly OrderService _orderService;
         private readonly UserManager<AppUser> _userManager;
 
-        public IndexModel(ApplicationDbContext context, CartService cartService, OrderService orderService, UserManager<AppUser> userManager)
+        public IndexModel(ApplicationDbContext context, CartService cartService, UserManager<AppUser> userManager)
         {
             _context = context;
             _cartService = cartService;
-            _orderService = orderService;
             _userManager = userManager;
         }
 
@@ -48,8 +46,7 @@ namespace NearGo.Pages.Checkout
 
             public string? Note { get; set; }
 
-            [Required(ErrorMessage = "Vui lòng chọn phương thức thanh toán")]
-            public string PaymentMethod { get; set; } = "COD";
+            public string PaymentMethod { get; set; } = "SEPay";
 
             public bool UsePoints { get; set; }
         }
@@ -91,37 +88,25 @@ namespace NearGo.Pages.Checkout
             SubTotal = _cartService.CalculateCartTotal(CartItems);
 
             var supermarketIds = CartItems.Select(c => c.Product.SupermarketId).Distinct();
-            foreach (var smId in supermarketIds)
+            var firstSmId = supermarketIds.FirstOrDefault();
+            var orderCode = $"NG{DateTime.UtcNow:yyyyMMddHHmmss}{Random.Shared.Next(100, 999)}";
+
+            var pending = new PendingCheckout
             {
-                if (Input.PaymentMethod == "SEPay")
-                {
-                    var orderCode = $"NG{DateTime.UtcNow:yyyyMMddHHmmss}{Random.Shared.Next(100, 999)}";
+                OrderCode = orderCode,
+                UserId = userId,
+                SupermarketId = firstSmId,
+                ShippingAddress = Input.ShippingAddress,
+                CustomerName = Input.CustomerName,
+                CustomerPhone = Input.CustomerPhone,
+                Note = Input.Note,
+                UsePoints = Input.UsePoints,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.PendingCheckouts.Add(pending);
+            await _context.SaveChangesAsync();
 
-                    var pending = new PendingCheckout
-                    {
-                        OrderCode = orderCode,
-                        UserId = userId,
-                        SupermarketId = smId,
-                        ShippingAddress = Input.ShippingAddress,
-                        CustomerName = Input.CustomerName,
-                        CustomerPhone = Input.CustomerPhone,
-                        Note = Input.Note,
-                        UsePoints = Input.UsePoints,
-                        CreatedAt = DateTime.UtcNow
-                    };
-                    _context.PendingCheckouts.Add(pending);
-                    await _context.SaveChangesAsync();
-
-                    return RedirectToPage("/Payment/SEPayReturn", new { orderCode });
-                }
-
-                var order = await _orderService.CreateOrder(
-                    userId, smId, Input.ShippingAddress,
-                    Input.CustomerName, Input.CustomerPhone, Input.Note, null, Input.UsePoints);
-            }
-
-            TempData["Success"] = "Đặt hàng thành công!";
-            return RedirectToPage("/Customer/Orders");
+            return RedirectToPage("/Payment/SEPayReturn", new { orderCode });
         }
     }
 }

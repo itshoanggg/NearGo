@@ -53,7 +53,7 @@ namespace NearGo.Pages.Supermarket
                 .ToListAsync();
         }
 
-        public async Task<IActionResult> OnPostReceiveOrderAsync(int id, bool? confirmPayment)
+        public async Task<IActionResult> OnPostReceiveOrderAsync(int id)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user?.SupermarketId == null) return Forbid();
@@ -67,28 +67,6 @@ namespace NearGo.Pages.Supermarket
             {
                 TempData["Error"] = "Đơn hàng chưa được xác nhận hoặc đã nhận hàng";
                 return RedirectToPage("ScanQR");
-            }
-
-            if (order.PaymentStatus == "Unpaid" && confirmPayment != true)
-            {
-                TempData["ConfirmPayment"] = order.Id.ToString();
-                TempData["ConfirmAmount"] = order.TotalAmount.ToString("N0");
-                return RedirectToPage("ScanQR", new { code = order.OrderCode });
-            }
-
-            if (order.PaymentStatus == "Unpaid")
-            {
-                order.PaymentStatus = "Paid";
-                order.PaymentDate = DateTime.UtcNow;
-                var sm = await _context.Supermarkets.FindAsync(order.SupermarketId);
-                if (sm != null)
-                {
-                    sm.TotalOrders = await _context.Orders
-                        .CountAsync(o => o.SupermarketId == order.SupermarketId && o.Status != "Cancelled");
-                    sm.TotalRevenue = await _context.Orders
-                        .Where(o => o.SupermarketId == order.SupermarketId && o.PaymentStatus == "Paid" && o.Status != "Cancelled")
-                        .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-                }
             }
 
             order.Status = "Received";
