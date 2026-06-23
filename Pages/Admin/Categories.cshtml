@@ -77,6 +77,20 @@
         </table>
     </div>
 
+    <div id="iconPickerModal" class="fixed inset-0 z-[60] items-center justify-center bg-black/50 modal-overlay">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-2xl mx-4 shadow-xl max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Chọn icon</h3>
+                <input type="text" id="iconSearch" oninput="filterIcons()" placeholder="Tìm icon..." class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-primary-500 outline-none w-48" />
+            </div>
+            <div id="iconGrid" class="grid grid-cols-8 gap-2 overflow-y-auto flex-1">
+            </div>
+            <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <button type="button" onclick="closeIconPicker()" class="px-4 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200">Đóng</button>
+            </div>
+        </div>
+    </div>
+
     <div id="categoryModal" class="fixed inset-0 z-50 items-center justify-center bg-black/50 modal-overlay">
         <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg mx-4 shadow-xl">
             <h3 id="modalTitle" class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Thêm danh mục</h3>
@@ -94,9 +108,16 @@
                                class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-primary-500 outline-none" />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Icon class</label>
-                        <input type="text" name="iconClass" id="fieldIcon" placeholder="fas fa-tag"
-                               class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-primary-500 outline-none" />
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Icon</label>
+                        <input type="hidden" name="iconClass" id="fieldIcon" value="fas fa-tag" />
+                        <div class="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900">
+                            <div id="iconPreview" class="w-10 h-10 rounded-lg bg-white dark:bg-gray-700 flex items-center justify-center text-primary-500 text-xl">
+                                <i class="fas fa-tag"></i>
+                            </div>
+                            <button type="button" onclick="openIconPicker()" class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">
+                                <i class="fas fa-icons mr-1"></i> Chọn icon
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mô tả</label>
@@ -129,6 +150,69 @@
 </div>
 @section Scripts {
     <script>
+        const ICONS = [
+            "fas fa-tag", "fas fa-tags", "fas fa-star", "fas fa-heart", "fas fa-fire",
+            "fas fa-bolt", "fas fa-crown", "fas fa-gem", "fas fa-medal", "fas fa-award",
+            "fas fa-utensils", "fas fa-pizza-slice", "fas fa-hamburger", "fas fa-coffee", "fas fa-mug-hot",
+            "fas fa-ice-cream", "fas fa-apple-alt", "fas fa-carrot", "fas fa-drumstick-bite", "fas fa-fish",
+            "fas fa-mobile-alt", "fas fa-laptop", "fas fa-desktop", "fas fa-tablet-alt", "fas fa-headphones",
+            "fas fa-camera", "fas fa-print", "fas fa-tv", "fas fa-plug", "fas fa-battery-full",
+            "fas fa-tshirt", "fas fa-shoe-prints", "fas fa-hat-cowboy", "fas fa-glasses", "fas fa-ring",
+            "fas fa-book", "fas fa-pen", "fas fa-pencil-alt", "fas fa-palette", "fas fa-music",
+            "fas fa-home", "fas fa-couch", "fas fa-bed", "fas fa-chair", "fas fa-lightbulb",
+            "fas fa-tools", "fas fa-wrench", "fas fa-hammer", "fas fa-paint-roller", "fas fa-screwdriver",
+            "fas fa-car", "fas fa-motorcycle", "fas fa-bicycle", "fas fa-truck", "fas fa-bus",
+            "fas fa-futbol", "fas fa-basketball-ball", "fas fa-volleyball-ball", "fas fa-running", "fas fa-swimmer",
+            "fas fa-gamepad", "fas fa-chess", "fas fa-dice", "fas fa-puzzle-piece", "fas fa-robot",
+            "fas fa-paw", "fas fa-dog", "fas fa-cat", "fas fa-horse", "fas fa-feather",
+            "fas fa-flask", "fas fa-microscope", "fas fa-atom", "fas fa-brain", "fas fa-dna",
+            "fas fa-leaf", "fas fa-tree", "fas fa-seedling", "fas fa-water", "fas fa-cloud",
+            "fas fa-gift", "fas fa-birthday-cake", "fas fa-balloon", "fas fa-candy-cane", "fas fa-champagne-glasses",
+            "fas fa-plane", "fas fa-map-marked-alt", "fas fa-compass", "fas fa-suitcase", "fas fa-hiking",
+            "fas fa-cogs", "fas fa-microchip", "fas fa-industry", "fas fa-chart-line", "fas fa-calculator",
+            "fas fa-phone", "fas fa-envelope", "fas fa-bell", "fas fa-clock", "fas fa-calendar",
+            "fas fa-shopping-cart", "fas fa-shopping-bag", "fas fa-shopping-basket", "fas fa-wallet", "fas fa-credit-card",
+            "fas fa-oil-can", "fas fa-gas-pump", "fas fa-charging-station", "fas fa-car-battery", "fas fa-tire",
+            "fas fa-tooth", "fas fa-heartbeat", "fas fa-stethoscope", "fas fa-pills", "fas fa-vial",
+            "fas fa-egg", "fas fa-cheese", "fas fa-bread-slice", "fas fa-pepper-hot", "fas fa-cookie"
+        ];
+
+        function openIconPicker() {
+            const grid = document.getElementById('iconGrid');
+            grid.innerHTML = '';
+            ICONS.forEach(icon => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-center p-3 rounded-lg cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-900/20 border border-transparent hover:border-primary-300 transition-all icon-option';
+                div.dataset.icon = icon;
+                div.innerHTML = '<i class="' + icon + ' text-lg text-gray-700 dark:text-gray-200"></i>';
+                div.onclick = function() { selectIcon(icon); };
+                grid.appendChild(div);
+            });
+            document.getElementById('iconPickerModal').classList.add('show');
+            document.getElementById('iconSearch').value = '';
+        }
+
+        function closeIconPicker() {
+            document.getElementById('iconPickerModal').classList.remove('show');
+        }
+
+        function selectIcon(icon) {
+            document.getElementById('fieldIcon').value = icon;
+            document.getElementById('iconPreview').innerHTML = '<i class="' + icon + '"></i>';
+            closeIconPicker();
+        }
+
+        function filterIcons() {
+            const q = document.getElementById('iconSearch').value.toLowerCase();
+            document.querySelectorAll('.icon-option').forEach(el => {
+                el.style.display = el.dataset.icon.includes(q) ? '' : 'none';
+            });
+        }
+
+        document.getElementById('iconPickerModal').addEventListener('click', function (e) {
+            if (e.target === this) closeIconPicker();
+        });
+
         function showModal() {
             document.getElementById('modalTitle').textContent = 'Thêm danh mục';
             document.getElementById('categoryForm').action = '?handler=Create';
@@ -137,6 +221,7 @@
             document.getElementById('fieldName').value = '';
             document.getElementById('fieldSlug').value = '';
             document.getElementById('fieldIcon').value = 'fas fa-tag';
+            document.getElementById('iconPreview').innerHTML = '<i class="fas fa-tag"></i>';
             document.getElementById('fieldDesc').value = '';
             document.getElementById('fieldSort').value = '0';
             document.getElementById('fieldActive').value = 'true';
@@ -150,6 +235,7 @@
             document.getElementById('fieldName').value = name;
             document.getElementById('fieldSlug').value = slug;
             document.getElementById('fieldIcon').value = icon;
+            document.getElementById('iconPreview').innerHTML = '<i class="' + icon + '"></i>';
             document.getElementById('fieldDesc').value = desc;
             document.getElementById('fieldSort').value = sort;
             document.getElementById('fieldActive').value = active ? 'true' : 'false';
