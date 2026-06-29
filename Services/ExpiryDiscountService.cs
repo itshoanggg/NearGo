@@ -78,7 +78,7 @@ namespace NearGo.Services
                 else if (daysLeft <= 14) rate = 0.30;
                 else rate = 0.20;
 
-                product.DiscountedPrice = Math.Round(product.OriginalPrice * (decimal)(1 - rate), -2);
+                product.DiscountedPrice = Math.Round(product.OriginalPrice * (decimal)(1 - rate) / 100) * 100;
                 product.DiscountPercentage = Math.Round(rate * 100, 1);
                 product.DealScore = Math.Round(rate * 10000, 1);
                 hasChanges = true;
