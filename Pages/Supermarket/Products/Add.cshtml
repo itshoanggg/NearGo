@@ -45,11 +45,6 @@
                 <span asp-validation-for="Input.OriginalPrice" class="text-xs text-red-500"></span>
             </div>
             <div>
-                <label asp-for="Input.DiscountedPrice" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Giá bán</label>
-                <input asp-for="Input.DiscountedPrice" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" />
-                <span asp-validation-for="Input.DiscountedPrice" class="text-xs text-red-500"></span>
-            </div>
-            <div>
                 <label asp-for="Input.StockQuantity" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Số lượng</label>
                 <input asp-for="Input.StockQuantity" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" />
                 <span asp-validation-for="Input.StockQuantity" class="text-xs text-red-500"></span>
@@ -58,6 +53,31 @@
                 <label asp-for="Input.ExpiryDate" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Hạn sử dụng</label>
                 <input asp-for="Input.ExpiryDate" type="date" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" />
                 <span asp-validation-for="Input.ExpiryDate" class="text-xs text-red-500"></span>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Loại khuyến mãi</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-600 dark:text-gray-300">
+                        <input type="radio" name="Input.DealType" value="giam-gia" checked onchange="toggleDealType('giam-gia')" class="text-primary-500 focus:ring-primary-500" />
+                        <i class="fas fa-tag text-primary-500"></i> Giảm giá (hàng còn hạn dài)
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-600 dark:text-gray-300">
+                        <input type="radio" name="Input.DealType" value="giam-sau" onchange="toggleDealType('giam-sau')" class="text-amber-500 focus:ring-amber-500" />
+                        <i class="fas fa-hourglass-half text-amber-500"></i> Giảm sâu (hàng sắp hết hạn)
+                    </label>
+                </div>
+            </div>
+            <div id="discountFields">
+                <div>
+                    <label asp-for="Input.DiscountedPrice" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Giá bán</label>
+                    <input asp-for="Input.DiscountedPrice" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" />
+                    <span asp-validation-for="Input.DiscountedPrice" class="text-xs text-red-500"></span>
+                </div>
+                <div>
+                    <label asp-for="Input.DiscountEndDate" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Giảm giá đến ngày</label>
+                    <input asp-for="Input.DiscountEndDate" type="date" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none text-sm" />
+                    <span asp-validation-for="Input.DiscountEndDate" class="text-xs text-red-500"></span>
+                </div>
             </div>
             <div>
                 <label asp-for="Input.Origin" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Xuất xứ</label>
@@ -100,6 +120,9 @@
         function toggleImageInput(mode) {
             document.getElementById('imageFileInput').classList.toggle('hidden', mode !== 'file');
             document.getElementById('imageUrlInput').classList.toggle('hidden', mode !== 'url');
+        }
+        function toggleDealType(type) {
+            document.getElementById('discountFields').classList.toggle('hidden', type !== 'giam-gia');
         }
     </script>
 }

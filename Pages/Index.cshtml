@@ -5,54 +5,57 @@
 }
 
 <!-- Hero Banner -->
-<div class="relative bg-primary-700 overflow-hidden">
-    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=1920')] bg-cover bg-center opacity-10"></div>
-    <div class="absolute inset-0 bg-black/40"></div>
+<div class="relative bg-gradient-to-br from-primary-700 via-primary-600 to-accent-600 overflow-hidden">
+    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1920')] bg-cover bg-center opacity-[0.08]"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-primary-900/60 to-transparent"></div>
+    <div class="absolute top-0 right-0 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+    <div class="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-2xl"></div>
     <div class="relative max-w-7xl mx-auto px-4 py-16 md:py-24">
         <div class="grid md:grid-cols-2 gap-8 items-center">
             <div data-aos="fade-right">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/20 text-white mb-4">
-                    <i class="fas fa-clock mr-1.5"></i> Sản phẩm cận date giá tốt
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-accent-500/20 text-accent-200 border border-accent-500/30 mb-4">
+                    <span class="w-1.5 h-1.5 bg-accent-400 rounded-full animate-ping absolute opacity-75" style="animation-duration:2s"></span>
+                    <span class="w-1.5 h-1.5 bg-accent-400 rounded-full mr-1.5"></span>Săn deal hời mỗi ngày
                 </span>
                 <h1 class="text-3xl md:text-5xl font-bold text-white leading-tight mb-4">
-                    Tiết kiệm hơn với<br/>
-                    <span class="text-accent-300">thực phẩm cận date</span>
+                    Săn <span class="text-accent-300">giảm giá</span> cực sâu,<br/>
+                    <span class="text-accent-300">deal chất lượng</span> mỗi ngày
                 </h1>
                 <p class="text-white/80 text-lg mb-8 max-w-lg">
-                    Mua thực phẩm chất lượng cao sắp đến hạn sử dụng với giá cực kỳ ưu đãi. Vừa tiết kiệm, vừa chống lãng phí thực phẩm.
+                    Hàng ngàn sản phẩm giảm giá siêu hấp dẫn từ các siêu thị uy tín. Săn ngay kẻo lỡ — tiết kiệm tối đa, chất lượng tối ưu!
                 </p>
                 <div class="flex flex-wrap gap-3">
-                    <a href="/products" class="px-6 py-3 bg-white text-primary-600 font-semibold rounded-xl hover:bg-gray-100 shadow-lg shadow-black/10 transition-all">
-                        <i class="fas fa-shopping-bag mr-2"></i>Mua ngay
+                    <a href="/products" class="px-6 py-3 bg-white text-primary-600 font-semibold rounded-xl hover:bg-gray-100 shadow-lg shadow-black/10 transition-all hover:scale-105">
+                        <i class="fas fa-fire mr-2"></i>Săn deal ngay
                     </a>
-                    <a href="#categories" class="px-6 py-3 bg-white/10 text-white font-medium rounded-xl hover:bg-white/20 border border-white/20 transition-all">
+                    <a href="#categories" class="px-6 py-3 bg-white/10 text-white font-medium rounded-xl hover:bg-white/20 border border-white/20 transition-all backdrop-blur-sm">
                         Khám phá <i class="fas fa-arrow-right ml-1.5"></i>
                     </a>
                 </div>
                 <div class="flex gap-8 mt-8 text-white/70">
                     <div><span class="text-2xl font-bold text-white">@Model.TotalSupermarkets+</span><p class="text-xs">Siêu thị</p></div>
                     <div><span class="text-2xl font-bold text-white">@Model.TotalProducts+</span><p class="text-xs">Sản phẩm</p></div>
-                    <div><span class="text-2xl font-bold text-white">@((int)Model.MaxDiscountPercentage)%</span><p class="text-xs">Tiết kiệm</p></div>
+                    <div><span class="text-2xl font-bold text-white">@((int)Model.MaxDiscountPercentage)%</span><p class="text-xs">Giảm giá</p></div>
                 </div>
             </div>
             <div class="hidden md:block" data-aos="fade-left">
                 <div class="relative">
-                    <div class="w-72 h-72 mx-auto bg-white/10 rounded-full blur-3xl"></div>
+                    <div class="w-72 h-72 mx-auto bg-accent-500/10 rounded-full blur-3xl"></div>
                     <div class="absolute inset-0 flex items-center justify-center">
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-white/10 backdrop-blur rounded-2xl p-4 mb-2 border border-white/20">
+                            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-4 mb-2 border border-white/20 hover:bg-white/20 transition-all">
                                 <i class="fas fa-tag text-2xl text-accent-300 mb-2"></i>
-                                <p class="text-white text-sm font-medium">Giảm đến 50%</p>
+                                <p class="text-white text-sm font-medium">Giảm đến @((int)Model.MaxDiscountPercentage)%</p>
                             </div>
-                            <div class="bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/20 mt-8">
-                                <i class="fas fa-leaf text-2xl text-green-300 mb-2"></i>
-                                <p class="text-white text-sm font-medium">Chống lãng phí</p>
+                            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 mt-8 hover:bg-white/20 transition-all">
+                                <i class="fas fa-bolt text-2xl text-yellow-300 mb-2"></i>
+                                <p class="text-white text-sm font-medium">Deal sốc mỗi ngày</p>
                             </div>
-                            <div class="bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/20 -mt-4">
+                            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 -mt-4 hover:bg-white/20 transition-all">
                                 <i class="fas fa-truck text-2xl text-blue-300 mb-2"></i>
                                 <p class="text-white text-sm font-medium">Giao nhanh</p>
                             </div>
-                            <div class="bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/20 mt-4">
+                            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 mt-4 hover:bg-white/20 transition-all">
                                 <i class="fas fa-shield text-2xl text-purple-300 mb-2"></i>
                                 <p class="text-white text-sm font-medium">Chất lượng</p>
                             </div>
@@ -92,19 +95,26 @@
     </div>
 </div>
 
-<!-- Featured Products -->
+<!-- Deal Products -->
 <section class="max-w-7xl mx-auto px-4 mt-10">
     <div class="flex items-center justify-between mb-6" data-aos="fade-up">
         <div>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Sản phẩm nổi bật</h2>
-            <p class="text-sm text-gray-500">Sản phẩm cận date với giá tốt nhất</p>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Deal hôm nay</h2>
+            <p class="text-sm text-gray-500">Sản phẩm giảm giá và sắp hết hạn</p>
         </div>
         <a href="/products" class="text-sm text-primary-600 hover:text-primary-700 font-medium">Xem tất cả <i class="fas fa-arrow-right ml-1"></i></a>
     </div>
+    <div class="flex gap-2 mb-6 flex-wrap" data-aos="fade-up">
+        <a href="/" class="px-4 py-1.5 text-sm rounded-full font-medium transition-all @(string.IsNullOrEmpty(Model.Filter) ? "bg-primary-500 text-white shadow-md" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600")">Tất cả</a>
+        <a href="/?filter=discount" class="px-4 py-1.5 text-sm rounded-full font-medium transition-all @(Model.Filter == "discount" ? "bg-primary-500 text-white shadow-md" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600")"><i class="fas fa-tag mr-1"></i>Giảm nhẹ</a>
+        <a href="/?filter=expiry" class="px-4 py-1.5 text-sm rounded-full font-medium transition-all @(Model.Filter == "expiry" ? "bg-red-500 text-white shadow-md" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600")"><i class="fas fa-hourglass-half mr-1"></i>Giảm sâu</a>
+    </div>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        @foreach (var product in Model.FeaturedProducts)
+        @foreach (var product in Model.DealProducts)
         {
-            <div class="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-gray-100 dark:border-gray-700" data-aos="fade-up" data-aos-delay="@(Model.FeaturedProducts.IndexOf(product) * 50)">
+            var isGiamNhe = product.DiscountEndDate.HasValue && product.DiscountEndDate > DateTime.UtcNow;
+            var isGiamSau = !isGiamNhe && product.ExpiryDate <= DateTime.UtcNow.AddDays(30);
+            <div class="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-gray-100 dark:border-gray-700" data-aos="fade-up" data-aos-delay="@(Model.DealProducts.IndexOf(product) * 50)">
                 <div class="relative overflow-hidden">
                     <a href="/products/detail?id=@product.Id">
                         <img src="@product.ImageUrl" alt="@product.Name" class="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
@@ -114,9 +124,9 @@
                         {
                             <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-lg">-@((int)product.DiscountPercentage)%</span>
                         }
-                        @if (product.SmartExpiryScore < 30)
+                        @if (isGiamSau)
                         {
-                            <span class="bg-accent-500 text-white text-xs font-bold px-2 py-0.5 rounded-lg">Sắp hết hạn</span>
+                            <span class="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-lg animate-pulse">Giảm sâu</span>
                         }
                     </div>
                     @if (User.Identity?.IsAuthenticated == true)
@@ -127,10 +137,10 @@
                     }
                 </div>
                 <div class="p-3">
-                    <a href="/products?supermarket=@product.Supermarket.Slug" class="text-xs text-primary-500 hover:text-primary-600 font-medium">@product.Supermarket.Name</a>
                     <a href="/products/detail?id=@product.Id">
                         <h3 class="text-sm font-semibold text-gray-900 dark:text-white truncate mt-1 hover:text-primary-600 transition-colors">@product.Name</h3>
                     </a>
+                    <p class="text-xs text-gray-400 mt-0.5">@product.Supermarket?.Name</p>
                     <div class="flex items-center gap-2 mt-2">
                         <span class="text-base font-bold text-gray-900 dark:text-white">@product.DiscountedPrice.ToString("N0")đ</span>
                         @if (product.DiscountPercentage > 0)
@@ -138,9 +148,23 @@
                             <span class="text-xs text-gray-400 line-through">@product.OriginalPrice.ToString("N0")đ</span>
                         }
                     </div>
+                    <div class="mt-1">
+                        @if (isGiamNhe)
+                        {
+                            <span class="inline-block text-xs text-primary-600 font-medium bg-primary-50 dark:bg-primary-900/20 px-2 py-0.5 rounded-full">
+                                <i class="fas fa-tag mr-0.5"></i>Giảm nhẹ - đến @product.DiscountEndDate!.Value.ToString("dd/MM")
+                            </span>
+                        }
+                        else if (isGiamSau)
+                        {
+                            var daysLeft = Math.Max(1, (int)(product.ExpiryDate - DateTime.UtcNow).TotalDays);
+                            <span class="inline-block text-xs text-amber-600 font-medium bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full animate-pulse">
+                                <i class="fas fa-hourglass-half mr-0.5"></i>Giảm sâu - còn @daysLeft ngày
+                            </span>
+                        }
+                    </div>
                     <div class="flex items-center justify-between mt-2">
-                        <span class="text-xs @((product.ExpiryDate - DateTime.UtcNow).Days <= 7 ? "text-red-500 font-medium" : "text-gray-400")"><i class="far fa-clock mr-1"></i>Còn @((product.ExpiryDate - DateTime.UtcNow).Days) ngày</span>
-                        <button onclick="addToCart(@product.Id)" class="w-8 h-8 bg-accent-500 text-gray-900 rounded-lg hover:bg-accent-600 transition-all shadow-sm shadow-accent-500/30">
+                        <button onclick="addToCart(@product.Id)" class="w-8 h-8 bg-accent-500 text-gray-900 rounded-lg hover:bg-accent-600 transition-all shadow-sm shadow-accent-500/30 ml-auto">
                             <i class="fas fa-plus text-xs"></i>
                         </button>
                     </div>
@@ -155,7 +179,7 @@
     <div class="flex items-center justify-between mb-6" data-aos="fade-up">
         <div>
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">Siêu thị đối tác</h2>
-            <p class="text-sm text-gray-500">Mua sắm từ các siêu thị uy tín</p>
+            <p class="text-sm text-gray-500">Săn deal từ các siêu thị uy tín trên toàn quốc</p>
         </div>
         <a href="/supermarkets" class="text-sm text-primary-600 hover:text-primary-700 font-medium">Xem tất cả <i class="fas fa-arrow-right ml-1"></i></a>
     </div>
@@ -179,4 +203,5 @@
     </div>
 </section>
 
-
+@section Scripts {
+}

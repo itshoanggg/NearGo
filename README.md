@@ -1,6 +1,6 @@
 # NearGo
 
-Nền tảng thương mại điện tử bán sản phẩm cận date dành cho siêu thị tại Việt Nam.
+Nền tảng săn giảm giá, deal hời từ các siêu thị uy tín tại Việt Nam.
 
 
 ## 📋 Yêu cầu

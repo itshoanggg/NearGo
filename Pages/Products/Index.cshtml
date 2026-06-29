@@ -29,8 +29,8 @@
                             <option value="newest" selected="@(Model.Sort == "newest")">Mới nhất</option>
                             <option value="price-asc" selected="@(Model.Sort == "price-asc")">Giá thấp đến cao</option>
                             <option value="price-desc" selected="@(Model.Sort == "price-desc")">Giá cao đến thấp</option>
-                            <option value="discount" selected="@(Model.Sort == "discount")">Giảm giá nhiều</option>
-                            <option value="expiry" selected="@(Model.Sort == "expiry")">Sắp hết hạn</option>
+                            <option value="discount" selected="@(Model.Sort == "discount")">Giảm nhẹ</option>
+                            <option value="expiry" selected="@(Model.Sort == "expiry")">Giảm sâu</option>
                         </select>
                     </div>
                     <div class="mb-4">
@@ -59,6 +59,11 @@
                 </h1>
                 <span class="text-sm text-gray-500 dark:text-gray-400">@Model.TotalCount sản phẩm</span>
             </div>
+            <div class="flex gap-2 mb-4 flex-wrap">
+                <a href="/products" class="px-4 py-1.5 text-sm rounded-full font-medium transition-all @(string.IsNullOrEmpty(Model.Sort) ? "bg-primary-500 text-white shadow-md" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600")">Tất cả</a>
+                <a href="/products?sort=discount" class="px-4 py-1.5 text-sm rounded-full font-medium transition-all @(Model.Sort == "discount" ? "bg-primary-500 text-white shadow-md" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600")"><i class="fas fa-tag mr-1"></i>Giảm nhẹ</a>
+                <a href="/products?sort=expiry" class="px-4 py-1.5 text-sm rounded-full font-medium transition-all @(Model.Sort == "expiry" ? "bg-red-500 text-white shadow-md" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600")"><i class="fas fa-hourglass-half mr-1"></i>Giảm sâu</a>
+            </div>
             @if (!string.IsNullOrEmpty(Model.SearchQuery))
             {
                 <div class="mb-4 p-3 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-200 rounded-xl text-sm">
@@ -78,15 +83,23 @@
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 @foreach (var product in Model.Products)
                 {
+                    var isGiamNhe = product.DiscountEndDate.HasValue && product.DiscountEndDate > DateTime.UtcNow;
+                    var isGiamSau = !isGiamNhe && product.ExpiryDate <= DateTime.UtcNow.AddDays(30);
                     <div class="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-gray-100 dark:border-gray-700">
                         <div class="relative overflow-hidden">
                             <a href="/products/detail?id=@product.Id">
                                 <img src="@product.ImageUrl" alt="@product.Name" class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                             </a>
-                            @if (product.DiscountPercentage > 0)
-                            {
-                                <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-lg">-@((int)product.DiscountPercentage)%</span>
-                            }
+                            <div class="absolute top-2 left-2 flex flex-col gap-1">
+                                @if (product.DiscountPercentage > 0)
+                                {
+                                    <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-lg">-@((int)product.DiscountPercentage)%</span>
+                                }
+                                @if (isGiamSau)
+                                {
+                                    <span class="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-lg animate-pulse">Giảm sâu</span>
+                                }
+                            </div>
                         </div>
                         <div class="p-3">
                             <a href="/products/detail?id=@product.Id">
@@ -100,9 +113,23 @@
                                     <span class="text-xs text-gray-400 dark:text-gray-500 line-through">@product.OriginalPrice.ToString("N0")đ</span>
                                 }
                             </div>
+                            <div class="mt-1">
+                                @if (isGiamNhe)
+                                {
+                                    <span class="inline-block text-xs text-primary-600 font-medium bg-primary-50 dark:bg-primary-900/20 px-2 py-0.5 rounded-full">
+                                        <i class="fas fa-tag mr-0.5"></i>Giảm nhẹ - đến @product.DiscountEndDate!.Value.ToString("dd/MM")
+                                    </span>
+                                }
+                                else if (isGiamSau)
+                                {
+                                    var daysLeft = Math.Max(1, (int)(product.ExpiryDate - DateTime.UtcNow).TotalDays);
+                                    <span class="inline-block text-xs text-amber-600 font-medium bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full animate-pulse">
+                                        <i class="fas fa-hourglass-half mr-0.5"></i>Giảm sâu - còn @daysLeft ngày
+                                    </span>
+                                }
+                            </div>
                             <div class="flex items-center justify-between mt-2">
-                                <span class="text-xs @((product.ExpiryDate - DateTime.UtcNow).Days <= 7 ? "text-red-500 font-medium dark:text-red-400" : "text-gray-400 dark:text-gray-500")"><i class="far fa-clock mr-1"></i>Còn @Math.Max(0, (product.ExpiryDate - DateTime.UtcNow).Days) ngày</span>
-                                <button onclick="addToCart(@product.Id)" class="w-8 h-8 bg-accent-500 text-gray-900 rounded-lg hover:bg-accent-600 transition-all shadow-sm shadow-accent-500/30">
+                                <button onclick="addToCart(@product.Id)" class="w-8 h-8 bg-accent-500 text-gray-900 rounded-lg hover:bg-accent-600 transition-all shadow-sm shadow-accent-500/30 ml-auto">
                                     <i class="fas fa-plus text-xs"></i>
                                 </button>
                             </div>

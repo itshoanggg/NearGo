@@ -8,6 +8,7 @@ namespace NearGo.Services
     public class FinanceService
     {
         private readonly ApplicationDbContext _context;
+        private const decimal FlatCommissionPercent = 10m;
 
         public FinanceService(ApplicationDbContext context)
         {
@@ -16,11 +17,7 @@ namespace NearGo.Services
 
         public async Task<decimal> GetCommissionPercentForSupermarket(int supermarketId)
         {
-            var supermarket = await _context.Supermarkets
-                .Where(s => s.Id == supermarketId)
-                .Select(s => s.SubscriptionTier)
-                .FirstOrDefaultAsync();
-            return supermarket == "Premium" ? 5m : 10m;
+            return FlatCommissionPercent;
         }
 
         public async Task AddOrderEarnings(int orderId)
@@ -39,7 +36,7 @@ namespace NearGo.Services
             if (alreadyExists)
                 return;
 
-            var commissionPercent = order.Supermarket.SubscriptionTier == "Premium" ? 5m : 10m;
+            var commissionPercent = FlatCommissionPercent;
             var commissionAmount = order.TotalAmount * commissionPercent / 100;
             var supermarketEarned = order.TotalAmount - commissionAmount;
 

@@ -19,7 +19,6 @@ namespace NearGo.Data
         public DbSet<Review> Reviews => Set<Review>();
         public DbSet<Wishlist> Wishlists => Set<Wishlist>();
         public DbSet<LoyaltyPoint> LoyaltyPoints => Set<LoyaltyPoint>();
-        public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
         public DbSet<RecentlyViewed> RecentlyVieweds => Set<RecentlyViewed>();
         public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
         public DbSet<Subscription> Subscriptions => Set<Subscription>();
@@ -51,7 +50,7 @@ namespace NearGo.Data
                 var supermarket = await Supermarkets.FindAsync(new object[] { supermarketId }, cancellationToken);
                 if (supermarket != null)
                 {
-                    var commissionPercent = supermarket.SubscriptionTier == "Premium" ? 5m : 10m;
+                    var commissionPercent = 10m;
                     var commissionAmount = totalAmount * commissionPercent / 100;
                     var supermarketEarned = totalAmount - commissionAmount;
                     supermarket.Balance += supermarketEarned;
@@ -105,6 +104,7 @@ namespace NearGo.Data
                 e.HasIndex(p => p.Slug);
                 e.HasIndex(p => p.IsActive);
                 e.HasIndex(p => p.ExpiryDate);
+                e.HasIndex(p => p.DiscountEndDate);
             });
 
             builder.Entity<Order>(e =>
@@ -182,11 +182,6 @@ namespace NearGo.Data
             {
                 e.HasOne(v => v.Supermarket).WithMany().HasForeignKey(v => v.SupermarketId).OnDelete(DeleteBehavior.SetNull);
                 e.HasIndex(v => v.Code).IsUnique();
-            });
-
-            builder.Entity<ChatMessage>(e =>
-            {
-                e.HasOne(cm => cm.User).WithMany().HasForeignKey(cm => cm.UserId).OnDelete(DeleteBehavior.Cascade);
             });
 
             builder.Entity<SupermarketRating>(e =>

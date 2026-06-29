@@ -60,7 +60,7 @@
                     <th class="pb-3 font-medium">Giảm</th>
                     <th class="pb-3 font-medium">Kho</th>
                     <th class="pb-3 font-medium">Đã bán</th>
-                    <th class="pb-3 font-medium">HSD</th>
+                    <th class="pb-3 font-medium">Loại KM</th>
                     <th class="pb-3 font-medium">Trạng thái</th>
                     <th class="pb-3 font-medium text-right">Thao tác</th>
                 </tr>
@@ -86,7 +86,21 @@
                             <span class="@(p.StockQuantity < 10 ? "text-red-500 font-medium" : "text-green-500")">@p.StockQuantity</span>
                         </td>
                         <td class="py-3 text-gray-500">@p.SoldCount</td>
-                        <td class="py-3 text-xs @(p.ExpiryDate < DateTime.UtcNow.AddDays(3) ? "text-red-500 font-medium" : "text-gray-500")">@p.ExpiryDate.ToString("dd/MM/yyyy")</td>
+                        <td class="py-3 text-xs">
+                            @if (p.DiscountEndDate.HasValue && p.DiscountEndDate > DateTime.UtcNow)
+                            {
+                                <span class="text-primary-500 font-medium">Giảm nhẹ<br/><span class="text-gray-400 font-normal">đến @p.DiscountEndDate.Value.ToString("dd/MM")</span></span>
+                            }
+                            else if (p.ExpiryDate > DateTime.UtcNow && p.ExpiryDate <= DateTime.UtcNow.AddDays(30))
+                            {
+                                var d = Math.Max(1, (int)(p.ExpiryDate - DateTime.UtcNow).TotalDays);
+                                <span class="text-amber-500 font-medium">Giảm sâu<br/><span class="text-gray-400 font-normal">còn @d ngày</span></span>
+                            }
+                            else
+                            {
+                                <span class="text-gray-400">—</span>
+                            }
+                        </td>
                         <td class="py-3">
                             @if (p.ExpiryDate < DateTime.UtcNow)
                             {

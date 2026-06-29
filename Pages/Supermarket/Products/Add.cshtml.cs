@@ -57,6 +57,9 @@ namespace NearGo.Pages.Supermarket.Products
             [Required(ErrorMessage = "Hạn sử dụng là bắt buộc")]
             public DateTime ExpiryDate { get; set; } = DateTime.UtcNow.AddDays(7);
 
+            public string DealType { get; set; } = "giam-gia";
+            public DateTime? DiscountEndDate { get; set; }
+
             public string? ImageUrl { get; set; }
             public IFormFile? ImageFile { get; set; }
             public string? Unit { get; set; } = "cái";
@@ -77,69 +80,64 @@ namespace NearGo.Pages.Supermarket.Products
             Categories = await _context.Categories.Where(c => c.IsActive).OrderBy(c => c.SortOrder).ToListAsync();
         }
 
+        [RequestSizeLimit(30 * 1024 * 1024)]
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid)
+            try
             {
-                Categories = await _context.Categories.Where(c => c.IsActive).OrderBy(c => c.SortOrder).ToListAsync();
-                return Page();
-            }
-
-            var user = await _userManager.GetUserAsync(User);
-            if (user?.SupermarketId == null) return Forbid();
-
-            var supermarket = await _context.Supermarkets.FindAsync(user.SupermarketId.Value);
-            if (supermarket == null) return Forbid();
-
-            if (supermarket.SubscriptionTier == "Free")
-            {
-                var activeCount = await _context.Products
-                    .CountAsync(p => p.SupermarketId == user.SupermarketId.Value && p.IsActive && p.StockQuantity > 0 && p.ExpiryDate > DateTime.UtcNow);
-                if (activeCount >= 10)
+                if (!ModelState.IsValid)
                 {
-                    TempData["Error"] = "Tài khoản Free chỉ được đăng tối đa 10 sản phẩm. Vui lòng nâng cấp lên Premium để đăng thêm.";
-                    return RedirectToPage("/Supermarket/Products/Add");
+                    Categories = await _context.Categories.Where(c => c.IsActive).OrderBy(c => c.SortOrder).ToListAsync();
+                    return Page();
                 }
-            }
 
-            var discountedPrice = Input.DiscountedPrice > 0 ? Input.DiscountedPrice : Input.OriginalPrice;
-            var discountPct = Input.OriginalPrice > 0 ? (double)((Input.OriginalPrice - discountedPrice) / Input.OriginalPrice * 100) : 0;
+                var user = await _userManager.GetUserAsync(User);
+                if (user?.SupermarketId == null) return Forbid();
 
-            var imageBytes = await ReadFileBytesAsync(Input.ImageFile);
+                var supermarket = await _context.Supermarkets.FindAsync(user.SupermarketId.Value);
+                if (supermarket == null) return Forbid();
 
-            var product = new NearGo.Models.Product
-            {
-                Name = Input.Name,
-                Slug = Input.Name.ToLower().Replace(" ", "-").Replace(",", "").Replace(".", "") + "-" + Guid.NewGuid().ToString().Substring(0, 6),
-                Description = Input.Description,
-                CategoryId = Input.CategoryId,
-                SupermarketId = user.SupermarketId.Value,
-                OriginalPrice = Input.OriginalPrice,
-                DiscountedPrice = discountedPrice,
-                DiscountPercentage = Math.Round(discountPct, 1),
-                StockQuantity = Input.StockQuantity,
-                ExpiryDate = Input.ExpiryDate,
-                ImageUrl = Input.ImageUrl ?? "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400",
-                ImageData = imageBytes,
-                ImageContentType = imageBytes != null ? Input.ImageFile!.ContentType : null,
-                Unit = Input.Unit ?? "cái",
-                Origin = Input.Origin,
-                Tags = Input.Tags,
-                IsActive = true,
-                SmartExpiryScore = Math.Round(100 - ((DateTime.UtcNow.AddDays(60) - Input.ExpiryDate).TotalDays / 60 * 100), 1)
-            };
+                var isGiamSau = Input.DealType == "giam-sau";
+                var discountedPrice = isGiamSau ? Input.OriginalPrice : (Input.DiscountedPrice > 0 ? Input.DiscountedPrice : Input.OriginalPrice);
+                var discountPct = isGiamSau ? 0 : (Input.OriginalPrice > 0 ? (double)((Input.OriginalPrice - discountedPrice) / Input.OriginalPrice * 100) : 0);
 
-            _context.Products.Add(product);
-            await _context.SaveChangesAsync();
+                var imageBytes = await ReadFileBytesAsync(Input.ImageFile);
 
-            if (product.ImageData != null)
-            {
-                product.ImageUrl = $"/image/product/{product.Id}";
+                var slug = string.IsNullOrWhiteSpace(Input.Name) ? "san-pham" : Input.Name.ToLower().Replace(" ", "-").Replace(",", "").Replace(".", "").Replace("&", "va").Replace("/", "-");
+                slug = System.Text.RegularExpressions.Regex.Replace(slug, @"[^a-z0-9-]", "") + "-" + Guid.NewGuid().ToString().Substring(0, 6);
+
+                var product = new NearGo.Models.Product
+                {
+                    Name = Input.Name,
+                    Slug = slug,
+                    Description = Input.Description,
+                    CategoryId = Input.CategoryId,
+                    SupermarketId = user.SupermarketId.Value,
+                    OriginalPrice = Input.OriginalPrice,
+                    DiscountedPrice = discountedPrice,
+                    DiscountPercentage = Math.Round(discountPct, 1),
+                    StockQuantity = Input.StockQuantity,
+                    ExpiryDate = Input.ExpiryDate,
+                    DiscountEndDate = isGiamSau ? null : Input.DiscountEndDate,
+                    ImageUrl = Input.ImageUrl ?? "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400",
+                    ImageData = imageBytes,
+                    ImageContentType = Input.ImageFile?.ContentType,
+                    Unit = Input.Unit ?? "cái",
+                    Origin = Input.Origin,
+                    Tags = Input.Tags,
+                    IsActive = true,
+                    DealScore = Math.Round(discountPct * 100, 1)
+                };
+
+                _context.Products.Add(product);
                 await _context.SaveChangesAsync();
-            }
 
-            if (supermarket.SubscriptionTier == "Premium")
-            {
+                if (product.ImageData != null)
+                {
+                    product.ImageUrl = $"/image/product/{product.Id}";
+                    await _context.SaveChangesAsync();
+                }
+
                 var supermarketName = supermarket.Name;
                 var ownerId = user.Id;
 
@@ -184,10 +182,16 @@ namespace NearGo.Pages.Supermarket.Products
                         catch { }
                     }
                 }
-            }
 
-            TempData["Success"] = "Thêm sản phẩm thành công!";
-            return RedirectToPage("/Supermarket/Products");
+                TempData["Success"] = "Thêm sản phẩm thành công!";
+                return RedirectToPage("/Supermarket/Products");
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Có lỗi xảy ra khi thêm sản phẩm: " + ex.Message;
+                Categories = await _context.Categories.Where(c => c.IsActive).OrderBy(c => c.SortOrder).ToListAsync();
+                return Page();
+            }
         }
     }
 }

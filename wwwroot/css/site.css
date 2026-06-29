@@ -31,3 +31,65 @@ input[type="number"] { -moz-appearance: textfield; }
 @media (max-width: 640px) {
     .swiper-button-next, .swiper-button-prev { display: none !important; }
 }
+
+.deal-glow {
+    animation: dealGlow 2s ease-in-out infinite;
+}
+@keyframes dealGlow {
+    0%, 100% { box-shadow: 0 0 5px rgba(245, 197, 24, 0.3); }
+    50% { box-shadow: 0 0 20px rgba(245, 197, 24, 0.6); }
+}
+
+.deal-badge {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    animation: badgePulse 2s ease-in-out infinite;
+}
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.countdown-urgent {
+    animation: urgentBlink 1s ease-in-out infinite;
+}
+@keyframes urgentBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.card-hover-effect {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-hover-effect:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.floating-tag {
+    animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.gradient-border {
+    position: relative;
+}
+.gradient-border::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #f5c518, transparent);
+}
+
+.price-flash {
+    animation: priceFlash 1.5s ease-in-out infinite;
+}
+@keyframes priceFlash {
+    0%, 100% { color: #ef4444; }
+    50% { color: #dc2626; }
+}

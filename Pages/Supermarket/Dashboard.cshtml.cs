@@ -41,7 +41,7 @@ namespace NearGo.Pages.Supermarket
             if (Supermarket == null) return;
 
             Balance = Supermarket.Balance;
-            CommissionPercent = Supermarket.SubscriptionTier == "Premium" ? 5m : 10m;
+            CommissionPercent = 10m;
 
             var totalGross = await _context.Orders
                 .Where(o => o.SupermarketId == Supermarket.Id && o.PaymentStatus == "Paid" && o.Status != "Cancelled")

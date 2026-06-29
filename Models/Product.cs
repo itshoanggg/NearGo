@@ -11,6 +11,7 @@ namespace NearGo.Models
         public double DiscountPercentage { get; set; }
         public int StockQuantity { get; set; }
         public DateTime ExpiryDate { get; set; }
+        public DateTime? DiscountEndDate { get; set; }
         public string? ImageUrl { get; set; }
         public byte[]? ImageData { get; set; }
         public string? ImageContentType { get; set; }
@@ -23,8 +24,7 @@ namespace NearGo.Models
         public DateTime? BoostExpiry { get; set; }
         public int ViewCount { get; set; }
         public int SoldCount { get; set; }
-        public double SmartExpiryScore { get; set; }
-        public bool AutoDiscountApplied { get; set; }
+        public double DealScore { get; set; }
         public string? Tags { get; set; }
         public int CategoryId { get; set; }
         public int SupermarketId { get; set; }

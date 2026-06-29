@@ -73,14 +73,25 @@ namespace NearGo.Pages.Products
             if (minPrice.HasValue) query = query.Where(p => p.DiscountedPrice >= minPrice.Value);
             if (maxPrice.HasValue) query = query.Where(p => p.DiscountedPrice <= maxPrice.Value);
 
-            query = Sort switch
+            if (Sort == "discount")
             {
-                "price-asc" => query.OrderByDescending(p => p.Supermarket.SubscriptionTier == "Premium").ThenBy(p => p.DiscountedPrice),
-                "price-desc" => query.OrderByDescending(p => p.Supermarket.SubscriptionTier == "Premium").ThenByDescending(p => p.DiscountedPrice),
-                "discount" => query.OrderByDescending(p => p.Supermarket.SubscriptionTier == "Premium").ThenByDescending(p => p.DiscountPercentage),
-                "expiry" => query.OrderByDescending(p => p.Supermarket.SubscriptionTier == "Premium").ThenBy(p => p.ExpiryDate),
-                _ => query.OrderByDescending(p => p.Supermarket.SubscriptionTier == "Premium").ThenByDescending(p => p.CreatedAt)
-            };
+                query = query.Where(p => p.DiscountEndDate > now)
+                    .OrderByDescending(p => p.DiscountPercentage);
+            }
+            else if (Sort == "expiry")
+            {
+                query = query.Where(p => p.DiscountEndDate == null && p.ExpiryDate <= now.AddDays(30))
+                    .OrderBy(p => p.ExpiryDate);
+            }
+            else
+            {
+                query = Sort switch
+                {
+                    "price-asc" => query.OrderBy(p => p.DiscountedPrice),
+                    "price-desc" => query.OrderByDescending(p => p.DiscountedPrice),
+                    _ => query.OrderByDescending(p => p.DealScore)
+                };
+            }
 
             TotalCount = await query.CountAsync();
             TotalPages = (int)Math.Ceiling(TotalCount / (double)PageSize);

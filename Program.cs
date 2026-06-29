@@ -57,19 +57,14 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.Configure<SEPaySettings>(builder.Configuration.GetSection("SEPay"));
 
-builder.Services.Configure<OpenAISettings>(builder.Configuration.GetSection("OpenAI"));
-builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("Gemini"));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
 
-builder.Services.AddHttpClient<OpenAIService>();
-builder.Services.AddHttpClient<GeminiService>();
-builder.Services.AddScoped<ChatbotContextService>();
 builder.Services.AddScoped<SEPayService>();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<FinanceService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddHostedService<ExpiryDiscountService>();
+builder.Services.AddHostedService<DealNotificationService>();
 
 builder.Services.AddSignalR();
 builder.Services.AddRazorPages();
@@ -96,7 +91,11 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
 {
     app.UseExceptionHandler("/error");
     app.UseHsts();

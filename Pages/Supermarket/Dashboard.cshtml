@@ -12,7 +12,7 @@
                 <p class="text-gray-600 dark:text-white/70 text-sm mt-1">Dashboard quản lý siêu thị</p>
             </div>
             <div class="flex items-center gap-2">
-                <span class="px-3 py-1 bg-white/20 rounded-lg text-xs font-medium">@Model.Supermarket?.SubscriptionTier</span>
+                <span class="px-3 py-1 bg-white/20 rounded-lg text-xs font-medium"><i class="fas fa-check-circle mr-1"></i>Miễn phí</span>
                 @if (Model.Supermarket?.IsVerified == true)
                 {
                     <span class="px-3 py-1 bg-green-400/30 rounded-lg text-xs font-medium"><i class="fas fa-check-circle mr-1"></i>Đã xác thực</span>
@@ -20,23 +20,17 @@
             </div>
         </div>
     </div>
-    @if (Model.Supermarket?.SubscriptionTier == "Free")
-    {
-        <div class="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 text-gray-900 dark:text-white flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-percentage"></i>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold">Bạn đang dùng gói Free</p>
-                    <p class="text-xs text-gray-600 dark:text-white/70">Phí hoa hồng @Model.CommissionPercent% trên mỗi đơn hàng</p>
-                </div>
+        <div class="bg-gradient-to-r from-accent-500 to-primary-500 rounded-2xl p-4 text-gray-900 dark:text-white flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <i class="fas fa-percentage"></i>
             </div>
-            <a href="/supermarket/upgrade" class="px-4 py-2 bg-white text-amber-600 font-semibold rounded-xl text-sm hover:bg-amber-50 transition-colors">
-                Nâng cấp ngay
-            </a>
+            <div>
+                <p class="text-sm font-semibold">Phí hoa hồng chỉ @Model.CommissionPercent%</p>
+                <p class="text-xs text-gray-600 dark:text-white/70">Tất cả tính năng đều miễn phí. Bạn chỉ trả hoa hồng khi có đơn hàng.</p>
+            </div>
         </div>
-    }
+    </div>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
             <div class="flex items-center justify-between mb-2">

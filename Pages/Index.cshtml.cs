@@ -16,15 +16,17 @@ namespace NearGo.Pages
         }
 
         public List<Category> Categories { get; set; } = new();
-        public List<Product> FeaturedProducts { get; set; } = new();
+        public List<Product> DealProducts { get; set; } = new();
         public List<NearGo.Models.Supermarket> Supermarkets { get; set; } = new();
         public int TotalSupermarkets { get; set; }
         public int TotalProducts { get; set; }
         public double MaxDiscountPercentage { get; set; }
+        public string? Filter { get; set; }
 
-        public async Task OnGetAsync()
+        public async Task OnGetAsync(string? filter)
         {
             var now = DateTime.UtcNow;
+            Filter = filter;
 
             Categories = await _context.Categories
                 .Where(c => c.IsActive)
@@ -32,11 +34,21 @@ namespace NearGo.Pages
                 .Take(16)
                 .ToListAsync();
 
-            FeaturedProducts = await _context.Products
+            var query = _context.Products
                 .Include(p => p.Supermarket)
                 .Include(p => p.Category)
-                .Where(p => p.IsActive && p.StockQuantity > 0 && p.ExpiryDate > now)
-                .OrderByDescending(p => p.IsBoosted)
+                .Where(p => p.IsActive && p.StockQuantity > 0 && p.ExpiryDate > now);
+
+            query = filter switch
+            {
+                "discount" => query.Where(p => p.DiscountEndDate > now),
+                "expiry" => query.Where(p => p.DiscountEndDate == null && p.ExpiryDate <= now.AddDays(30)),
+                _ => query
+            };
+
+            DealProducts = await query
+                .OrderByDescending(p => p.DealScore)
+                .ThenByDescending(p => p.DiscountPercentage)
                 .ThenByDescending(p => p.ViewCount)
                 .Take(15)
                 .ToListAsync();

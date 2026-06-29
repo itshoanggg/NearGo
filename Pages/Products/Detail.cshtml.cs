@@ -62,7 +62,7 @@ namespace NearGo.Pages.Products
             RelatedProducts = await _context.Products
                 .Include(p => p.Supermarket)
                 .Where(p => p.CategoryId == Product.CategoryId && p.Id != id && p.IsActive && p.StockQuantity > 0 && p.ExpiryDate > now)
-                .OrderByDescending(p => p.DiscountPercentage)
+                .OrderByDescending(p => p.DealScore)
                 .Take(6)
                 .ToListAsync();
 

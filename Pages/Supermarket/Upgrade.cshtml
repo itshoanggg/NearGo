@@ -1,96 +1,71 @@
 @page
 @model NearGo.Pages.Supermarket.UpgradeModel
 @{
-    ViewData["Title"] = "Nâng cấp gói";
+    ViewData["Title"] = "Thông tin hoa hồng";
     Layout = "_SupermarketLayout";
 }
 <div class="max-w-2xl space-y-6">
-    @if (Model.Supermarket?.SubscriptionTier == "Premium")
-    {
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 border-l-4 border-l-amber-500">
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 bg-amber-50 dark:bg-amber-900/20 rounded-2xl flex items-center justify-center shrink-0">
-                    <i class="fas fa-crown text-2xl text-amber-500"></i>
-                </div>
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Gói Premium</h2>
-                    <p class="text-sm text-gray-500">Bạn đang sử dụng gói Premium với đầy đủ tính năng.</p>
-                    @if (Model.Supermarket.SubscriptionExpiry.HasValue)
-                    {
-                        <p class="text-xs text-gray-400 mt-1">Hạn dùng: @Model.Supermarket.SubscriptionExpiry.Value.ToString("dd/MM/yyyy")</p>
-                    }
-                </div>
+    <div class="bg-gradient-to-r from-primary-500 to-accent-500 rounded-2xl p-6 text-gray-900 dark:text-white">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                <i class="fas fa-store text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold">@Model.Supermarket?.Name</h2>
+                <p class="text-gray-600 dark:text-white/70 text-sm">Tất cả tính năng đều miễn phí - Chỉ trả hoa hồng khi có đơn hàng</p>
             </div>
         </div>
-    }
-    else
-    {
-        <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-gray-900 dark:text-white">
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
-                    <i class="fas fa-store text-2xl"></i>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold">Gói Free</h2>
-                    <p class="text-gray-600 dark:text-white/70 text-sm">Bạn đang sử dụng gói miễn phí.</p>
-                </div>
-            </div>
-        </div>
+    </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center gap-4 mb-3">
-                <div class="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-check-circle text-green-500"></i>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">Đăng sản phẩm</p>
-                    <p class="text-lg font-bold text-gray-900 dark:text-white">Tối đa 10 sản phẩm</p>
-                </div>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Gói hiện tại</h3>
+        <div class="flex items-center gap-4 p-4 bg-green-50 dark:bg-green-900/10 rounded-xl mb-4">
+            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center shrink-0">
+                <i class="fas fa-check-circle text-green-500 text-xl"></i>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/20 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-percentage text-accent-500"></i>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">Phí hoa hồng</p>
-                    <p class="text-lg font-bold text-gray-900 dark:text-white">10% <span class="text-sm font-normal text-gray-400">/ đơn hàng</span></p>
-                </div>
+            <div>
+                <p class="text-xs text-green-600 dark:text-green-400 font-medium">Gói miễn phí (Mặc định)</p>
+                <p class="text-xl font-bold text-gray-900 dark:text-white">0₫<small class="text-sm font-normal text-gray-400">/tháng</small></p>
             </div>
         </div>
+        <ul class="space-y-3">
+            <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                <i class="fas fa-check-circle text-green-500 w-5"></i> Đăng sản phẩm không giới hạn
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                <i class="fas fa-check-circle text-green-500 w-5"></i> Phí hoa hồng chỉ <strong>@Model.CommissionPercent%</strong> / đơn hàng
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                <i class="fas fa-check-circle text-green-500 w-5"></i> Hiển thị sản phẩm không giới hạn
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                <i class="fas fa-check-circle text-green-500 w-5"></i> Tự động nhắc deal sắp kết thúc cho người theo dõi
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                <i class="fas fa-check-circle text-green-500 w-5"></i> Thông báo deal mới đến người theo dõi
+            </li>
+        </ul>
+    </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Nâng cấp lên Premium</h3>
-            <div class="flex items-center gap-4 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-xl mb-4">
-                <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center shrink-0">
-                    <i class="fas fa-crown text-amber-500 text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-xs text-amber-600 dark:text-amber-400 font-medium">Gói Premium</p>
-                    <p class="text-xl font-bold text-gray-900 dark:text-white">199.000<small class="text-sm font-normal text-gray-400">đ/tháng</small></p>
-                </div>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Thống kê nhanh</h3>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                <p class="text-xs text-gray-500">Tổng sản phẩm</p>
+                <p class="text-xl font-bold text-gray-900 dark:text-white">@Model.TotalProducts</p>
             </div>
-            <ul class="space-y-3 mb-6">
-                <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
-                    <i class="fas fa-check-circle text-green-500 w-5"></i> Đăng sản phẩm không giới hạn
-                </li>
-                <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
-                    <i class="fas fa-check-circle text-green-500 w-5"></i> Phí hoa hồng chỉ <strong>5%</strong> (thay vì 10%)
-                </li>
-                <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
-                    <i class="fas fa-check-circle text-green-500 w-5"></i> Ưu tiên hiển thị sản phẩm
-                </li>
-                <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
-                    <i class="fas fa-check-circle text-green-500 w-5"></i> Tự động giảm giá khi sắp hết hạn
-                </li>
-                <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
-                    <i class="fas fa-check-circle text-green-500 w-5"></i> Thông báo giảm sốc đến người theo dõi
-                </li>
-            </ul>
-            <form method="post">
-                <button type="submit" class="w-full py-3 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 shadow-md transition-all">
-                    <i class="fas fa-crown mr-2"></i> Nâng cấp ngay - 199.000đ
-                </button>
-            </form>
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                <p class="text-xs text-gray-500">Tổng đơn hàng</p>
+                <p class="text-xl font-bold text-gray-900 dark:text-white">@Model.TotalOrders</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                <p class="text-xs text-gray-500">Doanh thu</p>
+                <p class="text-xl font-bold text-gray-900 dark:text-white">@Model.TotalRevenue.ToString("N0")₫</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                <p class="text-xs text-gray-500">Phí hoa hồng</p>
+                <p class="text-xl font-bold text-gray-900 dark:text-white">@Model.TotalCommission.ToString("N0")₫</p>
+            </div>
         </div>
-    }
+    </div>
 </div>
