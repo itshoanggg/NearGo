@@ -1,0 +1,118 @@
+@page
+@model NearGo.Pages.Admin.ProductsModel
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    Layout = "_AdminLayout";
+}
+<div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tất cả sản phẩm (@Model.TotalCount)</h2>
+
+    <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+        <div>
+            <input type="text" name="search" value="@Model.Search" placeholder="Tên sản phẩm..." class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary-500 outline-none" />
+        </div>
+        <div>
+            <select name="supermarketId" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary-500 outline-none">
+                <option value="">Tất cả siêu thị</option>
+                @foreach (var sm in Model.Supermarkets)
+                {
+                    <option value="@sm.Id" selected="@(Model.SupermarketId == sm.Id)">@sm.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <select name="categoryId" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary-500 outline-none">
+                <option value="">Tất cả danh mục</option>
+                @foreach (var c in Model.Categories)
+                {
+                    <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@c.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <select name="productStatus" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary-500 outline-none">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Active" selected="@(Model.ProductStatus == "Active")">Đang bán</option>
+                <option value="OutOfStock" selected="@(Model.ProductStatus == "OutOfStock")">Hết hàng</option>
+                <option value="Expired" selected="@(Model.ProductStatus == "Expired")">Hết hạn</option>
+                <option value="Inactive" selected="@(Model.ProductStatus == "Inactive")">Đã ẩn</option>
+            </select>
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="flex-1 px-4 py-2.5 bg-primary-500 text-white text-sm font-medium rounded-xl hover:bg-primary-600 transition-colors">
+                <i class="fas fa-filter mr-1"></i> Lọc
+            </button>
+            <a href="/admin/products" class="px-4 py-2.5 border border-gray-200 dark:border-gray-600 text-gray-500 text-sm rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <i class="fas fa-undo"></i>
+            </a>
+        </div>
+    </form>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-left text-gray-500 border-b border-gray-100 dark:border-gray-700">
+                    <th class="pb-3 font-medium">Sản phẩm</th>
+                    <th class="pb-3 font-medium">Siêu thị</th>
+                    <th class="pb-3 font-medium">Danh mục</th>
+                    <th class="pb-3 font-medium">Giá</th>
+                    <th class="pb-3 font-medium">Hạn sử dụng</th>
+                    <th class="pb-3 font-medium">Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Products.Any())
+                {
+                    <tr><td colspan="6" class="py-8 text-center text-gray-400">Không có sản phẩm nào</td></tr>
+                }
+                @foreach (var p in Model.Products)
+                {
+                    var isExpired = p.ExpiryDate <= DateTime.UtcNow;
+                    <tr class="border-b border-gray-50 dark:border-gray-800">
+                        <td class="py-3">
+                            <div class="flex items-center gap-3">
+                                <img src="@(p.ImageUrl ?? "/images/no-image.png")" alt="@p.Name" class="w-10 h-10 rounded-lg object-cover" />
+                                <span class="text-gray-900 dark:text-white font-medium truncate max-w-[200px]">@p.Name</span>
+                            </div>
+                        </td>
+                        <td class="py-3 text-gray-500">@p.Supermarket?.Name</td>
+                        <td class="py-3 text-gray-500">@p.Category?.Name</td>
+                        <td class="py-3 text-gray-900 dark:text-white font-medium">@p.DiscountedPrice.ToString("N0")đ</td>
+                        <td class="py-3 text-gray-500">@p.ExpiryDate.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td class="py-3">
+                            @if (isExpired)
+                            {
+                                <span class="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-600">Hết hạn</span>
+                            }
+                            else if (!p.IsActive)
+                            {
+                                <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600">Đã ẩn</span>
+                            }
+                            else if (p.StockQuantity <= 0)
+                            {
+                                <span class="px-2 py-0.5 rounded-full text-xs bg-orange-100 text-orange-600">Hết hàng</span>
+                            }
+                            else
+                            {
+                                <span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-600">Đang bán</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="flex items-center justify-center gap-2 mt-6">
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <a href="@Url.Page("Products", new { p = i, search = Model.Search, productStatus = Model.ProductStatus, supermarketId = Model.SupermarketId, categoryId = Model.CategoryId })"
+                    class="px-3 py-1.5 text-sm rounded-lg @(i == Model.CurrentPage ? "bg-primary-500 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600")">
+                    @i
+                </a>
+            }
+        </div>
+    }
+</div>
