@@ -148,7 +148,7 @@
                                     </div>
                                 </td>
                                 <td class="py-3"><div class="flex items-center gap-1">@sm.Rating.ToString("0.0") <i class="fas fa-star text-yellow-400 text-xs"></i></div></td>
-                                <td class="py-3 text-gray-500">@sm.TotalOrders</td>
+                                <td class="py-3 text-gray-500">@Model.SupermarketOrderCounts.GetValueOrDefault(sm.Id, 0)</td>
                                 <td class="py-3 text-gray-900 dark:text-white font-medium">@sm.Balance.ToString("N0")đ</td>
                                 <td class="py-3">
                                     <span class="px-2 py-0.5 rounded-full text-xs @(sm.IsActive ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")">

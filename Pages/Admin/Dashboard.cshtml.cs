@@ -31,6 +31,7 @@ namespace NearGo.Pages.Admin
         public decimal TotalSupermarketBalance { get; set; }
         public int PendingWithdrawals { get; set; }
         public List<NearGo.Models.Supermarket> TopSupermarkets { get; set; } = new();
+        public Dictionary<int, int> SupermarketOrderCounts { get; set; } = new();
         public Dictionary<string, decimal> RevenueBySupermarket { get; set; } = new();
         public List<NearGo.Models.AppUser> RecentUsers { get; set; } = new();
 
@@ -45,10 +46,21 @@ namespace NearGo.Pages.Admin
             TotalSupermarketBalance = await _context.Supermarkets.SumAsync(s => (decimal?)s.Balance) ?? 0;
             PendingWithdrawals = await _context.WithdrawalRequests.CountAsync(w => w.Status == "Pending");
 
-            TopSupermarkets = await _context.Supermarkets
-                .OrderByDescending(s => s.TotalOrders)
+            var topSupermarketData = await _context.Orders
+                .Where(o => o.Status != "Cancelled")
+                .GroupBy(o => o.SupermarketId)
+                .Select(g => new { SupermarketId = g.Key, OrderCount = g.Count() })
+                .OrderByDescending(x => x.OrderCount)
                 .Take(5)
                 .ToListAsync();
+
+            var topIds = topSupermarketData.Select(x => x.SupermarketId).ToList();
+            TopSupermarkets = await _context.Supermarkets
+                .Where(s => topIds.Contains(s.Id))
+                .ToListAsync();
+
+            SupermarketOrderCounts = topSupermarketData.ToDictionary(x => x.SupermarketId, x => x.OrderCount);
+            TopSupermarkets = TopSupermarkets.OrderByDescending(s => SupermarketOrderCounts.GetValueOrDefault(s.Id, 0)).ToList();
 
             RevenueBySupermarket = await _financeService.GetRevenueBySupermarket();
 

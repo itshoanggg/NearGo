@@ -19,6 +19,7 @@ namespace NearGo.Pages.Admin.Supermarkets
 
         public NearGo.Models.Supermarket Supermarket { get; set; } = null!;
         public decimal TotalCommissionPaid { get; set; }
+        public int TotalOrders { get; set; }
         public int TotalPaidOrders { get; set; }
         public List<Order> RecentOrders { get; set; } = new();
         public string RevenueChartLabels { get; set; } = "[]";
@@ -35,6 +36,9 @@ namespace NearGo.Pages.Admin.Supermarkets
             TotalCommissionPaid = await _context.PlatformFees
                 .Where(f => f.SupermarketId == id && f.FeeType == "Commission" && f.Status == "Paid")
                 .SumAsync(f => (decimal?)f.Amount) ?? 0;
+
+            TotalOrders = await _context.Orders
+                .CountAsync(o => o.SupermarketId == id && o.Status != "Cancelled");
 
             TotalPaidOrders = await _context.Orders
                 .CountAsync(o => o.SupermarketId == id && o.PaymentStatus == "Paid" && o.Status != "Cancelled");

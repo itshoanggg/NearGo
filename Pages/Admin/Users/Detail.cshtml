@@ -95,7 +95,6 @@
                                     <th class="pb-3 font-medium">Tổng tiền</th>
                                     <th class="pb-3 font-medium">Trạng thái</th>
                                     <th class="pb-3 font-medium">Thanh toán</th>
-                                    <th class="pb-3 font-medium">Ngày</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -120,7 +119,6 @@
                                                 @(order.PaymentStatus == "Paid" ? "Đã thanh toán" : "Chưa thanh toán")
                                             </span>
                                         </td>
-                                        <td class="py-3 text-gray-500">@order.OrderDate.ToString("dd/MM/yyyy")</td>
                                     </tr>
                                 }
                             </tbody>
